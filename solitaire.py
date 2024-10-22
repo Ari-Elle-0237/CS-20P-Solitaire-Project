@@ -13,4 +13,7 @@ import cards
 import color
 
 class GameBoard:
-    
+    # TODO:
+    # - Store the deck
+    # - Store State of board
+    # - Functions for Different
