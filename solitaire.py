@@ -52,6 +52,7 @@ class Card:
 
 
 
+
     @classmethod
     def get_varieties(cls):
         return [(rank, suit) for rank in cls.pips for suit in cls.suit] #Returns all possible combinations for suits and rank.
