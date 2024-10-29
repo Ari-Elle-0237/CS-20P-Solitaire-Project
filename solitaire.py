@@ -5,7 +5,7 @@ by Ariel Zepezauer (arielzepezauer@gmail.com) and Luna Raggio (Aidanpraggio@gmai
 Pengo: 'azepezau' & 'araggio'
 Test Cases in unittest_.py
 Repository at: https://github.com/Ari-Elle-0237/CS-20P-Solitaire-Project.git
-Due: Oct 28th 2024
+Due: Nov 28th 2024
 Exit Code: _
 """
 
@@ -13,9 +13,6 @@ import cards
 import color
 
 class GameBoard:
-<<<<<<< Updated upstream
-    
-=======
     # TODO:
     # - Store the deck
     # - Store State of board
@@ -38,24 +35,17 @@ class GameBoard:
 
 
 class Card:
-
-    pips = ['A ', '2 ', '3 ', '4 ', '5 ', '6 ', '7 ', '8 ', '9 ', '10', 'J ', 'Q ', 'K ']
-    suit = ['♠', '♦', '♥', '♣']
+    PIPS = ['A ', '2 ', '3 ', '4 ', '5 ', '6 ', '7 ', '8 ', '9 ', '10', 'J ', 'Q ', 'K ']
+    SUIT = ['♠', '♦', '♥', '♣']
     def __init__(self, rank, suit):
         self.rank = rank #Some number between 1 and 13.
         self.suit = suit
         pass
-
+      
     def __str__(self):
         #returns the rank and suit as a string hopefully
         return f"{self.rank}{self.suit}"
 
-
-
-
     @classmethod
     def get_varieties(cls):
-        return [(rank, suit) for rank in cls.pips for suit in cls.suit] #Returns all possible combinations for suits and rank.
-
-
->>>>>>> Stashed changes
+        return [(rank, suit) for rank in cls.pips for suit in cls.suit] # Returns all possible combinations for suits and rank.
