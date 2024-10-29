@@ -13,6 +13,8 @@ import cards
 import color
 
 class GameBoard:
+    TAB_COUNT = 4
+    COL_COUNT = 6
     # TODO:
     # - Store the deck
     # - Store State of board
@@ -21,8 +23,8 @@ class GameBoard:
     def __init__(self):
         self.deck = [Card(rank, suit) for rank, suit in Card.get_varieties()]
         cards.shuffle(self.deck)
-        self.tableaus = [[] for _ in range(4)]
-        self.columns =  [[] for _ in range(6)]
+        self.tableaus = [[] for _ in range(self.TAB_COUNT)]
+        self.columns =  [[] for _ in range(self.COL_COUNT)]
 
     def __str__(self):
         print()
@@ -34,6 +36,15 @@ class GameBoard:
     @board.setter
     def board(self, value):
         self._board = value
+
+    def deal_cards(self):
+        col = 0
+        while self.deck:
+            if col == 0 and len(self.columns[0]) >= 2: # TODO: Rephrase this to comply with class style guides
+                continue
+            self.columns[col].append(self.deck.pop()) # TODO: Need to test this
+            col += 1 % self.COL_COUNT # TODO: This is definitely not right but something like this probably is
+
 
 
 
