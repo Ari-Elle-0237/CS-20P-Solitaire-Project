@@ -20,10 +20,12 @@ class GameBoard:
     # - Win detection
     def __init__(self):
         self.deck = [Card(rank, suit) for rank, suit in Card.get_varieties()]
+        cards.shuffle(self.deck)
         self.tableaus = [[] for _ in range(4)]
         self.columns =  [[] for _ in range(6)]
-        cards.shuffle(self.deck)
 
+    def __str__(self):
+        print()
 
     @property
     def board(self):
@@ -31,6 +33,7 @@ class GameBoard:
 
     @board.setter
     def board(self, value):
+        self._board = value
 
 
 
