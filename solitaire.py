@@ -13,8 +13,8 @@ import cards
 import color
 
 class GameBoard:
-    TAB_COUNT = 4
-    COL_COUNT = 6
+    TAB_COUNT = 4 # Tableau Count
+    COL_COUNT = 6 # Column Count
     # TODO:
     # - Store the deck
     # - Store State of board
@@ -44,7 +44,31 @@ class GameBoard:
                 continue
             self.columns[col].append(self.deck.pop()) # TODO: Need to test this
             col += 1 % self.COL_COUNT # TODO: This is definitely not right but something like this probably is
+        self. update_flipped_cards()
 
+    def update_flipped_cards(self):
+        """
+        Helper function for flipping cards on the board, works by modifying attributes inplace
+        :return: None
+        """
+        return NotImplemented
+    
+    def move(self, target, destination=None):
+        """
+
+        :param target: The card to be moved as specified by the user
+        :param destination: The destination column as specified by to user
+        :return: None
+        """
+        return NotImplemented
+
+    def check_destination(self, destination=None):
+        """
+        Helper function for move()
+        :param destination: Target column, if None, the destination is assumed to be a tableau
+        :return: bool
+        """
+        return NotImplemented
 
 
 
