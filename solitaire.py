@@ -12,7 +12,21 @@ Exit Code: _
 import cards
 import color
 
+class SolitaireUI:
+    """
+    A class for the UI
+    """
+    def __init__(self):
+        self.main_ui_loop()
+
+    def main_ui_loop(self):
+        while True:
+            return NotImplemented
+
 class GameBoard:
+    """
+    A class defining a solitaire board
+    """
     TAB_COUNT = 4 # Tableau Count
     COL_COUNT = 6 # Column Count
     def __init__(self):
@@ -22,24 +36,6 @@ class GameBoard:
         self.columns =  [[] for _ in range(self.COL_COUNT)]
         self.history = []
 
-    # <editor-fold: Magic Methods>
-    def __str__(self):
-        return NotImplemented
-
-    def __repr__(self):
-        return NotImplemented
-    # </editor-fold>
-
-    # <editor-fold: Properties>
-    @property
-    def board(self):
-        return self._board
-
-    @board.setter
-    def board(self, value):
-        self._board = value
-    # </editor-fold>
-
     # <editor-fold: Setup functions>
     def deal_cards(self):
         col = 0
@@ -48,10 +44,14 @@ class GameBoard:
                 continue
             self.columns[col].append(self.deck.pop()) # TODO: Need to test this
             col += 1 % self.COL_COUNT # TODO: This is definitely not right but something like this probably is
-        self. update_flipped_cards()
+        self.update_board()
     # </editor-fold>
 
-    # <editor-fold: Misc helper functions>
+    # <editor-fold: Updates and misc helper functions>
+    def update_board(self):
+        self.update_flipped_cards()
+        self.check_winstate()
+
     def update_flipped_cards(self):
         """
         Helper function for flipping cards on the board, works by modifying attributes inplace
@@ -76,6 +76,7 @@ class GameBoard:
         :return: None
         """
         return NotImplemented
+
 
     def check_destination(self, destination=None):
         """
@@ -104,6 +105,25 @@ class GameBoard:
         """
         return NotImplemented
     # </editor-fold>
+
+    # <editor-fold: Properties>
+    @property
+    def board(self):
+        return self._board
+
+    @board.setter
+    def board(self, value):
+        self._board = value
+    # </editor-fold>
+
+    # <editor-fold: Magic Methods>
+    def __str__(self):
+        return NotImplemented
+
+    def __repr__(self):
+        return NotImplemented
+    # </editor-fold>
+
 
 
 class Card:
