@@ -130,14 +130,15 @@ class Card:
     PIPS = ['A ', '2 ', '3 ', '4 ', '5 ', '6 ', '7 ', '8 ', '9 ', '10', 'J ', 'Q ', 'K ']
     SUIT = ['♠', '♦', '♥', '♣']
     def __init__(self, rank, suit):
-        self.rank = rank #Some number between 1 and 13.
+        self.rank = rank # Some number between 1 and 13.
         self.suit = suit
         pass
       
     def __str__(self):
-        #returns the rank and suit as a string hopefully
+        # returns the rank and suit as a string hopefully
         return f"{self.rank}{self.suit}"
 
     @classmethod
     def get_varieties(cls):
-        return [(rank, suit) for rank in cls.pips for suit in cls.suit] # Returns all possible combinations for suits and rank.
+        """Returns all possible combinations of suits and rank."""
+        return [(rank, suit) for rank in cls.PIPS for suit in cls.SUIT]
