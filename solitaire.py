@@ -43,7 +43,8 @@ class GameBoard:
             if col == 0 and len(self.columns[0]) >= 2: # TODO: Rephrase this to comply with class style guides
                 continue
             self.columns[col].append(self.deck.pop()) # TODO: Need to test this
-            col += 1 % self.COL_COUNT # TODO: This is definitely not right but something like this probably is
+            col += 1
+            col %= self.COL_COUNT
         self.update_board()
     # </editor-fold>
 
@@ -135,6 +136,10 @@ class Card:
         pass
       
     def __str__(self):
+        # returns the rank and suit as a string hopefully
+        return f"{self.rank}{self.suit}"
+
+    def __repr__(self):
         # returns the rank and suit as a string hopefully
         return f"{self.rank}{self.suit}"
 
