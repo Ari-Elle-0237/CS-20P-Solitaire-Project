@@ -1,13 +1,16 @@
 import unittest
 import solitaire as sol
 
-class MyTestCase(unittest.TestCase): # add assertion here
+class RussianRevolverTestCase(unittest.TestCase):
+    # TODO: Write a lot more tests
+
     def test_deal_cards(self):
-        self.test_breadth_first_columns(6, 1)
-        self.test_breadth_first_columns(12, 2)
+        # TODO: realized these tests are wrong, as they don't account for column 1 priority
+        self.check_breadth_first_columns(6, 1)
+        self.check_breadth_first_columns(12, 2)
 
 
-    def test_breadth_first_columns(self, deck_size, expected_col_len):
+    def check_breadth_first_columns(self, deck_size, expected_col_len):
         gb = sol.GameBoard() # gb: GameBoard
         gb.deck = [sol.Card('A','♣') for _ in range(deck_size)]
         print(f"{len(gb.deck)=}")
