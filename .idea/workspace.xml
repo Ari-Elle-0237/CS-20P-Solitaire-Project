@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
+<<<<<<< HEAD
     <list default="true" id="ff555447-ec08-4f5c-a7f3-7ea9dbba6820" name="Changes" comment="" />
+=======
+    <list default="true" id="bdfd633e-d9c0-4306-85f5-9dfcec3c1dbb" name="Changes" comment="" />
+>>>>>>> 97ae8b37307fa34811b660f2fef21073aecf2ba4
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -14,16 +18,27 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectColorInfo">{
+<<<<<<< HEAD
   &quot;associatedIndex&quot;: 1
 }</component>
   <component name="ProjectId" id="2noS3XbScBC8GOeB65X4lnCFVGe" />
+=======
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="2novDPl4NwhTdQDQdKJVA5kWwvl" />
+>>>>>>> 97ae8b37307fa34811b660f2fef21073aecf2ba4
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+<<<<<<< HEAD
     "RunOnceActivity.ShowReadmeOnStart": "true"
+=======
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "Luna"
+>>>>>>> 97ae8b37307fa34811b660f2fef21073aecf2ba4
   }
 }]]></component>
   <component name="SharedIndexes">
@@ -36,11 +51,19 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
+<<<<<<< HEAD
       <changelist id="ff555447-ec08-4f5c-a7f3-7ea9dbba6820" name="Changes" comment="" />
       <created>1729637741710</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1729637741710</updated>
+=======
+      <changelist id="bdfd633e-d9c0-4306-85f5-9dfcec3c1dbb" name="Changes" comment="" />
+      <created>1729652122972</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1729652122972</updated>
+>>>>>>> 97ae8b37307fa34811b660f2fef21073aecf2ba4
     </task>
     <servers />
   </component>
