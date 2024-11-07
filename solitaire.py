@@ -46,9 +46,6 @@ class Card:
         # returns the rank and suit as a string hopefully
         return f"{self.rank}{self.suit}"
 
-    def __repr__(self):
-        return f"{self.rank}{self.suit}"
-    
     @classmethod
     def get_varieties(cls):
         """Returns all possible combinations of suits and rank."""
