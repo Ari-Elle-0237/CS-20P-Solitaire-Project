@@ -68,6 +68,20 @@ class GameBoard:
 
     def gather_deck(self):
         """Function that collects all cards on the board not in a tableau and shuffles them into the deck"""
+        """
+        Loop over all the columns
+        Copy their contents into self.deck
+        Clear them
+        Then Shuffle the deck
+        """
+        """
+        Before:
+        Columns = [[Card(),Card(),Card()],[Card(),...],[Card(),...],[]...]
+        Deck = [a list of things]
+        After:
+        Columns = [[],[],[],[],[],[]]
+        Deck = [a list of things, Card(),Card(),Card()...]
+        """
         return NotImplemented
     # </editor-fold>
 
@@ -154,7 +168,6 @@ class GameBoard:
     def __repr__(self):
         return NotImplemented
     # </editor-fold>
-
 
 
 class Card:
