@@ -25,6 +25,21 @@ class RussianRevolverTestCase(unittest.TestCase):
     def test_can_flip_cards(self):
         pass
 
+    def test_card_string_method(self): # TODO: Make this handle colors
+        for card in sol.Card.get_varieties():
+            c = sol.Card(*card)
+            self.AssertEqual(print(c), f"{card[0]}{card[1]}")
+
+    def test_card_repr_method(self): # TODO: Make this handle colors
+        for card in sol.Card.get_varieties():
+            c = sol.Card(*card)
+            self.AssertEqual(print(c), f"Rank:{card[0]} Suit:{card[1]}, Face:\'up\'")
+            # c.flip()
+            self.AssertEqual(print(c), f"Rank:{card[0]} Suit:{card[1]}, Face:\'down\'")
+            # c.face = True
+            self.AssertEqual(print(c), f"Rank:{card[0]} Suit:{card[1]}, Face:\'up\'")
+
+
 
 if __name__ == '__main__':
     unittest.main()
