@@ -7,6 +7,7 @@ Test Cases in unittest_.py
 Repository at: https://github.com/Ari-Elle-0237/CS-20P-Solitaire-Project.git
 Due: Nov 28th 2024
 Exit Code: _
+Revert!
 """
 
 import cards
