@@ -82,7 +82,8 @@ class GameBoard:
         Columns = [[],[],[],[],[],[]]
         Deck = [a list of things, Card(),Card(),Card()...]
         """
-        return NotImplemented
+        for column in self.columns:
+            pass # Do something here
     # </editor-fold>
 
     # <editor-fold: Updates and misc helper functions>
