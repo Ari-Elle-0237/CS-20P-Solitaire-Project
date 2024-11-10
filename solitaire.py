@@ -183,7 +183,11 @@ class Card:
     def __init__(self, rank, suit):
         self.rank = rank # Some number between 1 and 13.
         self.suit = suit
+        self.face_up = True
         pass
+
+    def flip(self):
+        """Flips the card over"""
 
     def __str__(self):
         # returns the rank and suit as a string hopefully
