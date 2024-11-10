@@ -90,19 +90,22 @@ class GameBoard:
         self.update_flipped_cards()
         self.check_winstate()
 
-    def update_flipped_cards(self):
-        """
-        Helper function for flipping cards on the board, works by modifying attributes inplace
-        :return: None
-        """
-        """
-        Pseudocode:
-        Flip all cards face up
-        Ignore column 1
-        Flip the first 3 rows face down
-        Flip the last card in each row face up
-        """
-        return NotImplemented
+    def update_card_visibility(self):
+        """Updates the board to make sure cards are facing up according to solitaire rules"""
+        # TODO: See if this can be shortened or given improved readability with some list comprehensions
+        # TODO: Write a unittest for this function
+        # Flip all cards face up
+        for column in self.columns:
+            for card in column:
+                card.face_up = True
+        # Ignoring column 1
+        for column in self.columns[1:]:
+            # Flip the first 3 rows face down
+            for card in column[0:2]:
+                card.face_up = False
+            # Then, flip the last card in each row face up
+            column[-1].face_up = True
+
 
     def check_winstate(self):
         """
