@@ -97,14 +97,14 @@ class GameBoard:
         # Flip all cards face up
         for column in self.columns:
             for card in column:
-                card.face_up = True
+                card.visible = True
         # Ignoring column 1
         for column in self.columns[1:]:
             # Flip the first 3 rows face down
             for card in column[0:2]:
-                card.face_up = False
+                card.visible = False
             # Then, flip the last card in each row face up
-            column[-1].face_up = True
+            column[-1].visible = True
 
 
     def check_winstate(self):
@@ -186,11 +186,12 @@ class Card:
     def __init__(self, rank, suit):
         self.rank = rank # Some number between 1 and 13.
         self.suit = suit
-        self.face_up = True
+        self.visible = True
         pass
 
     def flip(self):
         """Flips the card over"""
+        self.visible ^= True
 
     def __str__(self):
         # returns the rank and suit as a string hopefully
