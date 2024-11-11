@@ -184,22 +184,51 @@ class GameBoard:
 
 
 class Pips(Enum):
-    ACE = {'Rank': 0,
+    # Ns if these names are proper style, but they seem to make sense to me so I'll use them for now
+    _A_ = {'Rank': 0,
            'Name': "ace",
            'Symbol': 'A',
            'Aliases': ['A', 'ACE', '0','1']}
-    TWO = {'Rank': 1,
+    _2_ = {'Rank': 1,
            'Name': "two",
            'Symbol': '2'}
-    THREE = {'Rank': 2,
+    _3_ = {'Rank': 2,
            'Name': "three",
            'Symbol': '3'}
 
-class Pip:
-    PIPS = ['A ', '2 ', '3 ', '4 ', '5 ', '6 ', '7 ', '8 ', '9 ', '10', 'J ', 'Q ', 'K ']
 
-    def __init__(self, rank):
-        self.rank = rank
+    def __gt__(self, other):
+        return self.value['Rank'] > other
+
+    def __lt__(self, other):
+        return self.value['Rank'] < other
+
+    def __str__(self):
+        return self.value['Symbol']
+
+    def __eq__(self, other):
+        return self.value["Aliases"] == other
+
+
+
+class Pip:
+    PIPS = {
+        "A": {
+            'Rank': 0,
+            'Name': "ace",
+            'Symbol': 'A',
+            'Aliases': []
+        },
+        "2": {'Rank': 1,
+              'Name': "two",
+              'Symbol': '2'},
+        "3": {'Rank': 2,
+              'Name': "three",
+              'Symbol': '3'}
+            }
+
+    def __init__(self, value):
+        for
 
 
 
