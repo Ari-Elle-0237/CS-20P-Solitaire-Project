@@ -173,9 +173,8 @@ class GameBoard:
             s += f"{tab[-1]}"
         for col in self.columns:
             s += str(col) + '\n'
+        return s
 
-
-        return NotImplemented
 
     def __repr__(self):
         return NotImplemented
