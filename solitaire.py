@@ -183,6 +183,8 @@ class Card:
     #  - Sanitize inputs
     PIPS = ['A ', '2 ', '3 ', '4 ', '5 ', '6 ', '7 ', '8 ', '9 ', '10', 'J ', 'Q ', 'K ']
     SUIT = ['♠', '♦', '♥', '♣']
+
+
     def __init__(self, rank, suit):
         self.rank = rank # Some number between 1 and 13.
         self.suit = suit
@@ -191,7 +193,7 @@ class Card:
 
     def flip(self):
         """Flips the card over"""
-        self.visible ^= True
+        self.visible = not self.visible
 
     def __str__(self):
         # returns the rank and suit as a string hopefully
@@ -222,4 +224,14 @@ class Card:
     @suit.setter
     def suit(self, value):
         # TODO: sanitize inputs and translate synonyms to the appropriate unicode
-        self._suit = value
+
+        if value in ('S', 's', '♠'):
+            self._suit = '♠'
+        elif value in ('D', 'd', '♦'):
+            self._suit = '♦'
+        elif value in ('H', 'h', '♥'):
+            self._suit = '♥'
+        elif value in ('C','c','♣'):
+            self._suit = '♣'
+        else:
+            raise ValueError("Unrecognized suit.")
