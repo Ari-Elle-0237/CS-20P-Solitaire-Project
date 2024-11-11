@@ -8,9 +8,10 @@ Repository at: https://github.com/Ari-Elle-0237/CS-20P-Solitaire-Project.git
 Due: Nov 28th 2024
 Exit Code: _
 """
-
 import cards
 import color
+from enum import Enum
+from dataclasses import dataclass
 
 class SolitaireUI:
     """
@@ -180,6 +181,31 @@ class GameBoard:
         return NotImplemented
     # </editor-fold>
 
+
+
+class Pips(Enum):
+    ACE = {'Rank': 0,
+           'Name': "ace",
+           'Symbol': 'A',
+           'Aliases': ['A', 'ACE', '0','1']}
+    TWO = {'Rank': 1,
+           'Name': "two",
+           'Symbol': '2'}
+    THREE = {'Rank': 2,
+           'Name': "three",
+           'Symbol': '3'}
+
+class Pip:
+    PIPS = ['A ', '2 ', '3 ', '4 ', '5 ', '6 ', '7 ', '8 ', '9 ', '10', 'J ', 'Q ', 'K ']
+
+    def __init__(self, rank):
+        self.rank = rank
+
+
+
+    def __gt__(self, other):
+
+    def __lt__(self, other):
 
 class Card:
     # TODO:
