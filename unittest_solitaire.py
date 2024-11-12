@@ -40,6 +40,27 @@ class RussianRevolverTestCase(unittest.TestCase):
             self.AssertEqual(print(c), f"Rank:{card[0]} Suit:{card[1]}, Face:\'up\'")
 
 
+    #SUIT = ['♠', '♦', '♥', '♣']
+    def test_suit_setter(self):
+        testSuits = {
+            '♠':'♠', "s":'♠', "S":'♠',
+            '♦':'♦', 'd':'♦', 'D':'♦',
+            '♥':'♥', 'h':'♥', 'H':'♥',
+            '♣':'♣', 'c':'♣', 'C':'♣'
+        }
+
+
+        for rank in ['A ', '2 ', '3 ', '4 ', '5 ', '6 ', '7 ', '8 ', '9 ', '10', 'J ', 'Q ', 'K ']:
+            for key in testSuits.keys():
+                card = sol.Card(rank, key)
+                self.assertEqual(card.suit, testSuits[key])
+
+        # self.assertRaises(sol.Card("A", "gvjl"), ValueError)
+        # Takes an invalid suit and asserts a ValueError through the format 'self.assertraises(value, error)'
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

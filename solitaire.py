@@ -52,6 +52,7 @@ class GameBoard:
         cards.shuffle(self.deck)
         self.tableaus = [[] for _ in range(self.TAB_COUNT)]
         self.columns =  [[] for _ in range(self.COL_COUNT)]
+        self.deals = 4
         self.history = []
 
     # <editor-fold: Setup functions>
@@ -166,7 +167,14 @@ class GameBoard:
 
     # <editor-fold: Magic Methods>
     def __str__(self):
-        return NotImplemented
+        # TODO: Make this actually like, look right, add colors, print in the right orientation etc.
+        s = f"Russian Revolver Solitaire {self.deals=}"
+        for tab in self.tableaus:
+            s += f"{tab[-1]}"
+        for col in self.columns:
+            s += str(col) + '\n'
+        return s
+
 
     def __repr__(self):
         return NotImplemented
@@ -183,6 +191,8 @@ class Card:
     #  - Sanitize inputs
     PIPS = ['A ', '2 ', '3 ', '4 ', '5 ', '6 ', '7 ', '8 ', '9 ', '10', 'J ', 'Q ', 'K ']
     SUIT = ['♠', '♦', '♥', '♣']
+
+
     def __init__(self, rank, suit):
         self.rank = rank # Some number between 1 and 13.
         self.suit = suit
@@ -190,8 +200,8 @@ class Card:
         pass
 
     def flip(self):
-        """Flips the card over by toggling visibility attribute"""
-        self.visible ^= True
+        """Flips the card over"""
+        self.visible = not self.visible
 
     def __str__(self):
         # returns the rank and suit as a string hopefully
@@ -222,4 +232,14 @@ class Card:
     @suit.setter
     def suit(self, value):
         # TODO: sanitize inputs and translate synonyms to the appropriate unicode
-        self._suit = value
+
+        if value in ('S', 's', '♠'):
+            self._suit = '♠'
+        elif value in ('D', 'd', '♦'):
+            self._suit = '♦'
+        elif value in ('H', 'h', '♥'):
+            self._suit = '♥'
+        elif value in ('C','c','♣'):
+            self._suit = '♣'
+        else:
+            raise ValueError("Unrecognized suit.")
