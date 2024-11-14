@@ -17,11 +17,15 @@ class SolitaireUI:
     A class for the UI
     """
     def __init__(self):
+        self.running = True # To be used in exit function - not yet implemented
         self.main_ui_loop()
 
     def main_ui_loop(self):
-        while True:
-            return NotImplemented
+        while True: # What does this do??
+        # Also oh god do we have to index each command manually? I mean thats not hard but
+        while self.running = True:
+            user_input = input("") # What do we wanna prompt the player with?
+            self.process_command(user_input)
 
     def process_command(self, user_input):
         """
@@ -30,11 +34,13 @@ class SolitaireUI:
 
         Could use regex? Would make it very resilient to typos, but it's definitely overkill.
         """
-        return NotImplemented
+        user_input = user_input.lower
+        if user_input == "exit":
+            self.exit
 
     def exit(self):
         """exits the ui loop"""
-        return NotImplemented
+        self.running = False
 
 class GameBoard:
     """
@@ -114,9 +120,27 @@ class GameBoard:
     def check_winstate(self):
         """
         Check if the game has been won
+        Specifically, checks to see if all cards
+        are in piles.
         :return: bool representing whether the game has been won
         """
-        return NotImplemented
+        if all(len(column) == 0 for column in self.columns): # we love w3schools
+            # uses
+            columns_empty = True
+        else:
+            columns_empty = False
+        if len(self.deck) == 0: # If the deck = []
+            deck_empty = True
+        else:
+            deck_empty = False
+            """
+            I have a feeling this should not be all that's in the argument checklist;
+            But the logic checks out - columns and deck are empty, where else could the cards be?
+            """
+        return columns_empty and deck_empty
+
+
+
     # </editor-fold>
 
     # <editor-fold: move() and move() helper functions>
