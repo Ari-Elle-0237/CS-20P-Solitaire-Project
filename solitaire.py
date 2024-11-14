@@ -83,7 +83,10 @@ class GameBoard:
         Columns = [[],[],[],[],[],[]]
         Deck = [a list of things, Card(),Card(),Card()...]
         """
-        return NotImplemented
+        for col in self.columns:
+            self.deck += col
+            col = []
+        cards.shuffle(self.deck)
     # </editor-fold>
 
     # <editor-fold: Updates and misc helper functions>
