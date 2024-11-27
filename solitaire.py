@@ -17,14 +17,14 @@ class SolitaireUI:
     A class for the UI
     """
     def __init__(self):
-        self.running = True # To be used in exit function - not yet implemented
+        self.running # To be used in exit function - not yet implemented
         self.main_ui_loop()
 
     def main_ui_loop(self):
         while True: # What does this do??
         # Also oh god do we have to index each command manually? I mean thats not hard but
-        while self.running = True:
-            user_input = input("") # What do we wanna prompt the player with?
+        while self.running:
+            user_input = input("Enter A Command. (use 'help' for options.): ") # What do we wanna prompt the player with?
             self.process_command(user_input)
 
     def process_command(self, user_input):
@@ -34,9 +34,15 @@ class SolitaireUI:
 
         Could use regex? Would make it very resilient to typos, but it's definitely overkill.
         """
-        user_input = user_input.lower
-        if user_input == "exit":
-            self.exit
+
+        commands = {
+         "exit": self.exit,
+
+        }
+        if user_input in commands:
+            commands[user_input]()
+        else:
+            print("Invalid Command.")
 
     def exit(self):
         """exits the ui loop"""
@@ -91,7 +97,7 @@ class GameBoard:
         """
         for col in self.columns:
             self.deck += col
-            col = []
+            col.clear()
         cards.shuffle(self.deck)
     # </editor-fold>
 
@@ -232,7 +238,15 @@ class Card:
 
     def __str__(self):
         # returns the rank and suit as a string hopefully
-        return f"{self.rank}{self.suit}"
+        if self.suit in {'♦', '♥'}:
+            color.fgcolor(RED)
+        else:
+            color.fgcolor(BLACK)
+
+        card_str = f"{self.rank}{self.suit}"
+
+        nocolor() # reset to default (output will remain colored without)
+        return card_str
 
     def __repr__(self):
         # returns the rank and suit as a string hopefully
@@ -249,7 +263,10 @@ class Card:
 
     @rank.setter
     def rank(self, value):
-        self._rank = value
+        if value in Card.PIPS:
+            self._rank = value
+        else:
+            raise ValueError("Invalid Rank.")
 
     @property
     def suit(self):

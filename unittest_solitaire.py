@@ -1,6 +1,7 @@
 import unittest
 import solitaire as sol
 
+
 class RussianRevolverTestCase(unittest.TestCase):
     # TODO: Write a lot more tests
 
@@ -57,6 +58,16 @@ class RussianRevolverTestCase(unittest.TestCase):
 
         # self.assertRaises(sol.Card("A", "gvjl"), ValueError)
         # Takes an invalid suit and asserts a ValueError through the format 'self.assertraises(value, error)'
+
+    def test_process_command(self):
+        return NotImplemented
+
+    def test_colors(self):
+        #firstCard = sol.Card('A', '♥')
+        #secondCard = sol.Card('K', '♠')
+        return NotImplemented
+
+
 
 
 
