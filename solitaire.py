@@ -76,6 +76,7 @@ class GameBoard:
         self.columns =  [[] for _ in range(self.COL_COUNT)]
         self.deals = 6
         self.history = []
+        self.deal_cards()
 
     # <editor-fold: Setup functions>
     def deal_cards(self):
@@ -168,6 +169,15 @@ class GameBoard:
         :return: None
         """
         card = Card.from_string(target)
+        if card is None:
+            print(f"invalid card: {target}.")
+            return
+        if destination is None:
+            print("No destination.")
+            return
+        if destination < 0 or (destination >= len(self.columns) and destination >= len(self.tableaus)):
+            print("Invalid destination.")
+            return
         if not self.valid_move(card, destination):
             print(f"invalid move: {target} to {destination}")
             return
@@ -176,8 +186,20 @@ class GameBoard:
 
 
     def valid_move(self, card, destination):
-        if destination in self.tableaus:
-            return self.is_found
+        if destination in range(len(self.tableaus)):
+            tableau_top = self.tableaus[destination][-1] if self.tableaus[destination] else None
+            if tableau_top is None:
+                return card.rank == 'A'
+            return card.suit == tableau_top.suit and card.rank == card.PIPS[Card.PIPS.index(tableau_top.rank) + 1]
+
+        elif destination in range(len(self.columns)):
+            column = self.columns[destination]
+            column_top = column[-1] if column else None
+            if not column_top:
+                return card.rank == 'K'
+            return card.suit == column_top.suit and Card.PIPS.index(card, rank) == Card.PIPS.index(column_top.rank) - 1
+        else:
+            return False
 
 
     def check_destination(self, destination=None):
@@ -236,11 +258,6 @@ class GameBoard:
 
 class Card:
     # TODO:
-    #  - Implement card face up/ face down
-    #  - Make it so suits will accept either the unicode or ascii representation
-    #    (make it so the code treats '♣' as equivalent to 'c', this logic can be implemented in the setter function)
-    #  - Make Cards print with color
-    #  - Implement __repr__()
     #  - Sanitize inputs
     PIPS = ['A ', '2 ', '3 ', '4 ', '5 ', '6 ', '7 ', '8 ', '9 ', '10', 'J ', 'Q ', 'K ']
     SUIT = ['♠', '♦', '♥', '♣']
@@ -267,6 +284,11 @@ class Card:
     def __repr__(self):
         # returns the rank and suit as a string hopefully
         return str(self)
+
+    @classmethod
+    def new_deal(cls):
+        # Creates a new deck
+        return [Card(rank, suit) for suit in cls.SUITS for rank in cls.PIPS]
 
     @classmethod
     def get_varieties(cls):
