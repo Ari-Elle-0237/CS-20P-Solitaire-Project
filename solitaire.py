@@ -17,14 +17,12 @@ class SolitaireUI:
     A class for the UI
     """
     def __init__(self):
-        self.running # To be used in exit function - not yet implemented
+        self.running = True # To be used in exit function - not yet implemented
         self.main_ui_loop()
 
     def main_ui_loop(self):
-        while True: # What does this do??
-        # Also oh god do we have to index each command manually? I mean thats not hard but
         while self.running:
-            user_input = input("Enter A Command. (use 'help' for options.): ") # What do we wanna prompt the player with?
+            user_input = input("Enter A Command. (use 'help' for options.): ")
             self.process_command(user_input)
 
     def process_command(self, user_input):
@@ -36,13 +34,25 @@ class SolitaireUI:
         """
 
         commands = {
-         "exit": self.exit,
-
+            "exit": self.exit,
+            "help": self.help_message,
+            "shuf": self.shuffle,
+            "cheat": self.cheat,
         }
         if user_input in commands:
             commands[user_input]()
         else:
             print("Invalid Command.")
+
+    def help_message(self):
+        print("Commands:")
+        print(" help: show this message.")
+        print(" exit: quits the game.")
+        print(" shuf: shuffle the cards.")
+        print(" cheat: increase shuffle limit.")
+
+    def cheat(self):
+        return NotImplemented
 
     def exit(self):
         """exits the ui loop"""
@@ -64,7 +74,7 @@ class GameBoard:
         cards.shuffle(self.deck)
         self.tableaus = [[] for _ in range(self.TAB_COUNT)]
         self.columns =  [[] for _ in range(self.COL_COUNT)]
-        self.deals = 4
+        self.deals = 6
         self.history = []
 
     # <editor-fold: Setup functions>
@@ -157,7 +167,17 @@ class GameBoard:
         :param destination: The destination column as specified by to user
         :return: None
         """
-        return NotImplemented
+        card = Card.from_string(target)
+        if not self.valid_move(card, destination):
+            print(f"invalid move: {target} to {destination}")
+            return
+        self.columns[destination].append(card)
+        self.update_board()
+
+
+    def valid_move(self, card, destination):
+        if destination in self.tableaus:
+            return self.is_found
 
 
     def check_destination(self, destination=None):
@@ -230,7 +250,6 @@ class Card:
         self.rank = rank # Some number between 1 and 13.
         self.suit = suit
         self.visible = True
-        pass
 
     def flip(self):
         """Flips the card over"""
@@ -238,19 +257,16 @@ class Card:
 
     def __str__(self):
         # returns the rank and suit as a string hopefully
-        if self.suit in {'♦', '♥'}:
-            color.fgcolor(RED)
+        if self.visible:
+            color.fgcolor(color.RED if self.suit in {'♦', '♥'} else color.BLACK)
+            return f"{self.rank}{self.suit}"
         else:
-            color.fgcolor(BLACK)
-
-        card_str = f"{self.rank}{self.suit}"
-
-        nocolor() # reset to default (output will remain colored without)
-        return card_str
+            color.fgcolor(color.BLACK)
+            return "[X]"
 
     def __repr__(self):
         # returns the rank and suit as a string hopefully
-        return f"{self.rank}{self.suit}"
+        return str(self)
 
     @classmethod
     def get_varieties(cls):
