@@ -70,7 +70,7 @@ class GameBoard:
     TAB_COUNT = 4 # Tableau Count
     COL_COUNT = 6 # Column Count
     def __init__(self):
-        self.deck = [Card(rank, suit) for rank, suit in Card.get_varieties()]
+        self.deck = Card.new_deal() # Previously [Card(rank, suit) for rank, suit in Card.get_varieties()]
         cards.shuffle(self.deck)
         self.tableaus = [[] for _ in range(self.TAB_COUNT)]
         self.columns =  [[] for _ in range(self.COL_COUNT)]
@@ -175,7 +175,7 @@ class GameBoard:
         if destination is None:
             print("No destination.")
             return
-        if destination < 0 or (destination >= len(self.columns) and destination >= len(self.tableaus)):
+        if destination < 0 or destination >= len(self.columns) + >= len(self.tableaus):
             print("Invalid destination.")
             return
         if not self.valid_move(card, destination):
@@ -197,7 +197,7 @@ class GameBoard:
             column_top = column[-1] if column else None
             if not column_top:
                 return card.rank == 'K'
-            return card.suit == column_top.suit and Card.PIPS.index(card, rank) == Card.PIPS.index(column_top.rank) - 1
+            return card.suit == column_top.suit and Card.PIPS.index(card.rank) == Card.PIPS.index(column_top.rank) - 1
         else:
             return False
 
@@ -259,7 +259,7 @@ class GameBoard:
 class Card:
     # TODO:
     #  - Sanitize inputs
-    PIPS = ['A ', '2 ', '3 ', '4 ', '5 ', '6 ', '7 ', '8 ', '9 ', '10', 'J ', 'Q ', 'K ']
+    PIPS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
     SUIT = ['♠', '♦', '♥', '♣']
 
 
