@@ -92,6 +92,7 @@ class SolitaireUI:
         Could use regex? Would make it very resilient to typos, but it's definitely overkill.
         """
 
+
         commands = {
             "exit": self.exit,
             "help": self.help_message,
@@ -101,10 +102,72 @@ class SolitaireUI:
             "save": self.save_game,
             "load": self.load_game,
         }
+        # Check for simple commands
         if user_input in commands:
             commands[user_input]()
+            return
+
+        # Check for move commands: [card] [destination]
+        parts = user_input.split()
+        if len(parts) == 2:
+            card_input, destination = parts
+            card = Card.from_string(self.normalize_card_input(card_input))
+            if card and destination.isdigit():
+                if self.game_board.move(card, int(destination) - 1):  # Adjust for 0-based index
+                    print("Move successful.")
+                else:
+                    print("Invalid move.")
+            else:
+                print("Invalid command format.")
         else:
             print("Invalid Command.")
+
+    def normalize_card_input(self, card_input):
+        """
+        Converts input like '8 h' or '8h' into a proper card string (e.g., '8♥').
+        """
+        card_input = card_input.strip().replace(" ", "")
+        if len(card_input) > 1:
+            rank = card_input[:-1]
+            suit = card_input[-1].lower()
+            suit_map = {'s': '♠', 'h': '♥', 'd': '♦', 'c': '♣'}
+            return f"{rank}{suit_map.get(suit, '')}"
+        return card_input
+
+    def parse_command(command):
+        parts = command.strip().split()
+        if len(parts) < 2:
+            return "Invalid command format."
+
+        # Extract card, destination type, and number
+        card = parts[0]  # Card to move (e.g., 'ah' or '10c')
+        destination = parts[1]  # Destination identifier
+
+        if destination.startswith('t'):  # Tableau destination
+            try:
+                tableau_number = int(destination[1:])
+                return "tableau", card, tableau_number
+            except ValueError:
+                return "Invalid tableau identifier."
+        else:  # Assume column destination
+            try:
+                column_number = int(destination)
+                return "column", card, column_number
+            except ValueError:
+                return "Invalid column identifier."
+
+        return "Unknown destination type."
+
+    def execute_command(command_type, card, destination_number):
+        if command_type == "column":
+            # Move card to the column
+            move_to_column(card, destination_number)
+        elif command_type == "tableau":
+            # Move card to the tableau
+            move_to_tableau(card, destination_number)
+        else:
+            print("Invalid destination type.")
+
 
 class GameBoard:
     """
