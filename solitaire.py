@@ -30,7 +30,8 @@ class SolitaireUI:
             user_input = input("Enter A Command. (use 'help' for options.): ")
             self.process_command(user_input)
 
-    def help_message(self):
+    @staticmethod
+    def help_message():
         print("Commands:")
         print(" help: show this message.")
         print(" exit: quits the game.")
@@ -54,22 +55,15 @@ class SolitaireUI:
     def save_game(self):
         filename = input("Enter filename to save the gamestate to: ")
         # Using pickle - taken mostly from Python Documentation
-        # This try/except block seems unnecesary and too broad
-        # try:
         with open(filename, 'wb') as file:
             pickle.dump(self.game_board, file)
         print("Gamestate saved successfully.")
-        # except Exception as e:
-        #     print(f"Error saving game: {e}")
 
     def load_game(self):
         filename = input("Enter filename to load the gamestate from: ")
-        # try:
         with open(filename, 'rb') as file:
             self.game_board = pickle.load(file)
         print("Game loaded.")
-        # except Exception as e:
-            # print(f"Error loading game: {e}")
 
     def shuffle(self):
         if self.game_board.deals > 0:
@@ -78,8 +72,6 @@ class SolitaireUI:
             self.game_board.deals -= 1
         else:
             print("No shuffles remaining.")
-        
-
 
     def exit(self):
         """exits the ui loop"""
@@ -103,7 +95,6 @@ class SolitaireUI:
         if user_input in commands:
             commands[user_input]()
             return
-
         # Check for move commands: [card] [destination]
         parts = user_input.split()
         if len(parts) == 2:
@@ -155,19 +146,6 @@ class SolitaireUI:
             except ValueError:
                 return "Invalid column identifier."
 
-        # return "Unknown destination type."
-
-    # This method appears to have no usages, I am unclear on what this is meant to do
-    # def execute_command(self, command_type, card, destination_number):
-    #     if command_type == "column":
-    #         # Move card to the column
-    #         move_to_column(card, destination_number)
-    #     elif command_type == "tableau":
-    #         # Move card to the tableau
-    #         move_to_tableau(card, destination_number)
-    #     else:
-    #         print("Invalid destination type.")
-
 
 class GameBoard:
     """
@@ -176,9 +154,6 @@ class GameBoard:
     TAB_COUNT = 4 # Tableau Count
     COL_COUNT = 6 # Column Count
     def __init__(self):
-        if self.COL_COUNT <= 0:
-            raise ValueError("Column count must be greater than 0.")
-
         self.deck = Card.new_deal() # Previously [Card(rank, suit) for rank, suit in Card.get_varieties()]
         cards.shuffle(self.deck)
         self.tableaus = [[] for _ in range(self.TAB_COUNT)]
@@ -186,13 +161,6 @@ class GameBoard:
         self.deals = 6
         self.history = []
         self.deal_cards()
-
-    # This is a duplicate definition
-    # def update_card_visibility(self):
-    #     for column in self.columns:
-    #         for i, card in enumerate(column):
-    #             card.visible = i == len(column) - 1
-
 
     def check_winstate(self):
         """
@@ -203,17 +171,6 @@ class GameBoard:
         """
         if all(len(column) == 0 for column in self.columns) and len(self.deck) == 0: # w3schools
             print("Congratulations, you win!")
-            '''
-            columns_empty = True
-        else:
-            columns_empty = False
-        if len(self.deck) == 0: # If the deck = []
-            deck_empty = True
-        else:
-            deck_empty = False
-
-        return columns_empty and deck_empty
-        '''
 
     def update_board(self):
         self.update_card_visibility()
@@ -225,29 +182,16 @@ class GameBoard:
             card = self.deck.pop()
             card.visible = True
             self.columns[0].append(card)
-
         col = 1
         while self.deck:
             card = self.deck.pop()
             card.visible = True if len(self.columns[col]) == 0 else False
             self.columns[col].append(card)
             col = (col + 1) % self.COL_COUNT if col < self.COL_COUNT - 1 else 1
-
         for column in self.columns[1:]:
             for i in range(max(0, len(column) - 3)):
                 column[i].visible = False
-
         self.update_board()
-
-            # if col == 0 and len(self.columns[0]) >= 2: # TODO: Rephrase this to comply with class style guides
-            #     continue
-            # self.columns[col].append(self.deck.pop()) # TODO: Need to test how pop() works
-            # col += 1
-            # col %= self.COL_COUNT
-            #  self.update_board()
-
-
-
 
     def gather_deck(self):
         for col in self.columns:
@@ -257,13 +201,10 @@ class GameBoard:
     # </editor-fold>
 
     # <editor-fold: Updates and misc helper functions>
-
-
     def update_card_visibility(self):
         """Updates the board to make sure cards are facing up according to solitaire rules"""
-        # TODO: See if this can be shortened or given improved readability with some list comprehensions
-        # TODO: Write a unittest for this function
         # Flip all cards face up
+        self.prune_array(self.columns)
         for column in self.columns:
             for card in column:
                 card.visible = True
@@ -274,7 +215,6 @@ class GameBoard:
                 card.visible = False
             # Then, flip the last card in each row face up
             column[-1].visible = True
-
 
     @staticmethod
     def rotate_cw(array_2d):
@@ -316,32 +256,16 @@ class GameBoard:
             while row[-1] is None:
                 row.pop()
         return array_2d
-
     # </editor-fold>
 
     # <editor-fold: move() and move() helper functions>
     def move(self, target, destination):
         """
-
         :param target: The card to be moved as specified by the user
         :param destination: The destination column as specified by to user
         :return: None
         """
         card = Card.from_string(target)
-        # if card is None:
-        #     print(f"invalid card: {target}.")
-        #     return
-        # if destination is None:
-        #     print("No destination.")
-        #     return
-        # if destination < 0 or destination >= len(self.columns) + >= len(self.tableaus):
-        #     print("Invalid destination.")
-        #     return
-        # if not self.valid_move(card, destination):
-        #     print(f"invalid move: {target} to {destination}")
-        #     return
-        # self.columns[destination].append(card)
-        # self.update_board()
         if not card:
             print("invalid card.")
             return False
@@ -370,6 +294,7 @@ class GameBoard:
         return False
 
     def valid_move(self, card, destination):
+        # TODO: It seems like there's likely a bug in this function, need to investigate
         if destination in range(len(self.tableaus)):
             tableau_top = self.tableaus[destination][-1] if self.tableaus[destination] else None
             if tableau_top is None:
@@ -384,16 +309,6 @@ class GameBoard:
             return card.suit == column_top.suit and Card.PIPS.index(card.rank) == Card.PIPS.index(column_top.rank) - 1
         else:
             return False
-
-
-    def check_destination(self, destination=None):
-        """
-        Helper function for move()
-        :param destination: Target column, if None, the destination is assumed to be a tableau
-        :return: bool
-        """
-        raise NotImplemented
-
     # </editor-fold>
 
     # <editor-fold: undo() and savestate functions>
@@ -418,29 +333,9 @@ class GameBoard:
         self.tableaus = [tab[:] for tab in boardstate["tableaus"]]
         self.columns = [col[:] for col in boardstate["columns"]]
         self.deals = boardstate["deals"]
-
     # </editor-fold>
 
-    # Unnecessary property declaration
-    # # <editor-fold: Properties>
-    # @property
-    # def board(self):
-    #     return self._board
-    #
-    # @board.setter
-    # def board(self, value):
-    #     self._board = value
-    # # </editor-fold>
-
     # <editor-fold: Magic Methods>
-    # def __str__(self):
-    #     s = f"Russian Revolver Solitaire\nShuffles left: {self.deals}\n"
-    #     for i, col in enumerate(self.columns):
-    #         s += f"Column {i+1}: {[str(card) for card in col]}\n"
-    #     for i, tab in enumerate(self.tableaus):
-    #         s += f"Tableau {i+1}: {tab}\n"
-    #     return s
-
     def __str__(self):
         # TODO: Make this handle colors,
         #  also maybe see about using f-string alignment instead of the janky predefined spaces in PIPS
@@ -458,18 +353,12 @@ class GameBoard:
         for col in columns:
              s += f"|{'|'.join([f" {card} " if card else f"     "for card in col])}|\n"
         return s
-
-
-    # def __repr__(self):
-    #     return NotImplemented
     # </editor-fold>
 
 
 class Card:
     PIPS = [' A', ' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', '10', ' J', ' Q', ' K']
     SUIT = ['♠', '♦', '♥', '♣']
-
-
     def __init__(self, rank, suit):
         self.rank = rank # Some number between 1 and 13.
         self.suit = suit
@@ -541,7 +430,4 @@ class Card:
             raise ValueError("Unrecognized suit.")
 
 if __name__ == "__main__":
-    # try:
-        SolitaireUI()
-    # except Exception as e:
-    #     print(f"An error occurred: {e}")
+    SolitaireUI()
