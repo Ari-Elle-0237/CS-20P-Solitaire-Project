@@ -293,22 +293,24 @@ class GameBoard:
         print("Invalid move.")
         return False
 
-    def valid_move(self, card, destination):
-        # TODO: It seems like there's likely a bug in this function, need to investigate
-        if destination in range(len(self.tableaus)):
-            tableau_top = self.tableaus[destination][-1] if self.tableaus[destination] else None
-            if tableau_top is None:
-                return card.rank == 'A'
-            return card.suit == tableau_top.suit and card.rank == card.PIPS[Card.PIPS.index(tableau_top.rank) + 1]
-
-        elif destination in range(len(self.columns)):
-            column = self.columns[destination]
-            column_top = column[-1] if column else None
-            if not column_top:
-                return card.rank == 'K'
-            return card.suit == column_top.suit and Card.PIPS.index(card.rank) == Card.PIPS.index(column_top.rank) - 1
-        else:
-            return False
+    # def valid_move(self, card, destination):
+    #     # TODO: It seems like there's likely a bug in this function, need to investigate
+    #       We actually don't need this function it seems but it should be kept
+    #       in place as a safeguard if we ever need it.
+    #     if destination in range(len(self.tableaus)):
+    #         tableau_top = self.tableaus[destination][-1] if self.tableaus[destination] else None
+    #         if tableau_top is None:
+    #             return card.rank == 'A'
+    #         return card.suit == tableau_top.suit and card.rank == card.PIPS[Card.PIPS.index(tableau_top.rank) + 1]
+    #
+    #     elif destination in range(len(self.columns)):
+    #         column = self.columns[destination]
+    #         column_top = column[-1] if column else None
+    #         if not column_top:
+    #             return card.rank == 'K'
+    #         return card.suit == column_top.suit and Card.PIPS.index(card.rank) == Card.PIPS.index(column_top.rank) - 1
+    #     else:
+    #         return False
     # </editor-fold>
 
     # <editor-fold: undo() and savestate functions>
