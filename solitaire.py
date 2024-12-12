@@ -11,6 +11,7 @@ Exit Code: _
 
 import cards
 import color
+import pickle
 
 class SolitaireUI:
     """
@@ -18,10 +19,12 @@ class SolitaireUI:
     """
     def __init__(self):
         self.running = True # To be used in exit function - not yet implemented
+        self.game_board = GameBoard()
         self.main_ui_loop()
 
     def main_ui_loop(self):
         while self.running:
+            print(self.game_board)
             user_input = input("Enter A Command. (use 'help' for options.): ")
             self.process_command(user_input)
 
@@ -38,6 +41,9 @@ class SolitaireUI:
             "help": self.help_message,
             "shuf": self.shuffle,
             "cheat": self.cheat,
+            "undo": self.undo,
+            "save": self.save,
+            "load": self.load,
         }
         if user_input in commands:
             commands[user_input]()
@@ -50,9 +56,39 @@ class SolitaireUI:
         print(" exit: quits the game.")
         print(" shuf: shuffle the cards.")
         print(" cheat: increase shuffle limit.")
+        print(" undo: undo the last move.")
+        print(" save: save the current game state. (One slot)")
+        print(" load: load the saved game state.")
+        print(" [card] [destination]: move a card to a destination (column or tableau).")
 
     def cheat(self):
-        return NotImplemented
+        self.game_board.deals += 6
+        print("Shuffle count increased.")
+
+    def undo(self):
+        if self.game_board.undo():
+            print("Last move undone.")
+        else:
+            print("No moves to undo.")
+
+    def save_game(self):
+        filename = input("Enter filename to save the gamestate to: ")
+        # Using pickle - taken mostly from Python Documentation
+        try:
+            with open(filename, 'rb') as file:
+                pickle.dump(self.game_board, file)
+            print("Gamestate saved successfully.")
+        except Exception as e:
+            print(f"Error saving game: {e}")
+
+    def load_game(self):
+        filename = input("Enter filename to load the gamestate from: ")
+        try:
+            with open(filename, 'rb') as file:
+                self.game_board = pickle.load(file)
+            print("Game loaded.")
+        except Exception as e:
+            print(f"Error loading game: {e}")
 
     def exit(self):
         """exits the ui loop"""
@@ -78,17 +114,67 @@ class GameBoard:
         self.history = []
         self.deal_cards()
 
+
+    def update_card_visibility(self):
+        for column in self.columns:
+            for i, card in enumerate(column):
+                card.visible = i == len(column) - 1
+
+
+    def check_winstate(self):
+        """
+        Check if the game has been won
+        Specifically, checks to see if all cards
+        are in piles.
+        :return: bool representing whether the game has been won
+        """
+        if all(len(column) == 0 for column in self.columns) and len(self.deck) == 0: # w3schools
+            print("Congratulations, you win!")
+            '''
+            columns_empty = True
+        else:
+            columns_empty = False
+        if len(self.deck) == 0: # If the deck = []
+            deck_empty = True
+        else:
+            deck_empty = False
+
+        return columns_empty and deck_empty
+        '''
+
+    def update_board(self):
+        self.update_card_visibility()
+        self.check_winstate()
+
     # <editor-fold: Setup functions>
     def deal_cards(self):
-        # TODO: make the first column be dealt first
-        col = 0
+        for _ in range(min(2, len(self.deck))):
+            card = self.deck.pop()
+            card.visible = True
+            self.columns[0].append(card)
+
+        col = 1
         while self.deck:
+            card = self.deck.pop()
+            card.visible = True if len(self.columns[col]) == 0 else False
+            self.columns[col].append(card)
+            col = (col + 1) % self.COL_COUNT if col < self.COL_COUNT - 1 else 1
+
+        for column in self.columns[1:]:
+            for i in range(max(0, len(column) - 3)):
+                column[i].visible = False
+
+        self.update_board()
+
+            '''
             if col == 0 and len(self.columns[0]) >= 2: # TODO: Rephrase this to comply with class style guides
                 continue
             self.columns[col].append(self.deck.pop()) # TODO: Need to test how pop() works
             col += 1
             col %= self.COL_COUNT
-        self.update_board()
+             self.update_board()
+            '''
+
 
     def gather_deck(self):
         """Function that collects all cards on the board not in a tableau and shuffles them into the deck"""
@@ -113,9 +199,7 @@ class GameBoard:
     # </editor-fold>
 
     # <editor-fold: Updates and misc helper functions>
-    def update_board(self):
-        self.update_flipped_cards()
-        self.check_winstate()
+
 
     def update_card_visibility(self):
         """Updates the board to make sure cards are facing up according to solitaire rules"""
@@ -133,35 +217,10 @@ class GameBoard:
             # Then, flip the last card in each row face up
             column[-1].visible = True
 
-
-    def check_winstate(self):
-        """
-        Check if the game has been won
-        Specifically, checks to see if all cards
-        are in piles.
-        :return: bool representing whether the game has been won
-        """
-        if all(len(column) == 0 for column in self.columns): # we love w3schools
-            # uses
-            columns_empty = True
-        else:
-            columns_empty = False
-        if len(self.deck) == 0: # If the deck = []
-            deck_empty = True
-        else:
-            deck_empty = False
-            """
-            I have a feeling this should not be all that's in the argument checklist;
-            But the logic checks out - columns and deck are empty, where else could the cards be?
-            """
-        return columns_empty and deck_empty
-
-
-
     # </editor-fold>
 
     # <editor-fold: move() and move() helper functions>
-    def move(self, target, destination=None):
+    def move(self, target, destination):
         """
 
         :param target: The card to be moved as specified by the user
@@ -169,6 +228,7 @@ class GameBoard:
         :return: None
         """
         card = Card.from_string(target)
+        '''
         if card is None:
             print(f"invalid card: {target}.")
             return
@@ -183,7 +243,33 @@ class GameBoard:
             return
         self.columns[destination].append(card)
         self.update_board()
+        '''
+        if not card:
+            print("invalid card.")
+            return False
 
+        source_column = next((col for col in self.columns if card in col), None)
+        if not source_column or not card.visible:
+            print("Card not available for move.")
+            return False
+
+        if destination < len(self.columns):
+            column_top = self.columns[destination][-1] if self.columns[destination] else None
+            if column_top is None:
+                if card.rank == 'K':
+                    self.save_board_state()
+                    source_column.remove(card)
+                    self.columns[destination].append(card)
+                    self.update_board()
+                    return True
+            elif card.suit == column_top.suit and Card.PIPS.index(card.rank) == Card.PIPS.index(column_top.rank) - 1:
+                self.save_board_state()
+                source_column.remove(card)
+                self.columns[destination].append(card)
+                self.update_board()
+                return True
+        print("Invalid move.")
+        return False
 
     def valid_move(self, card, destination):
         if destination in range(len(self.tableaus)):
@@ -214,20 +300,27 @@ class GameBoard:
 
     # <editor-fold: undo() and savestate functions>
     def undo(self):
-        """Undo to the last move"""
-        return NotImplemented
+        if self.history:
+            boardstate = self.history.pop()
+            self.load_board_state(boardstate)
+            return True
+        return False
 
     def save_board_state(self):
-        """Creates a savestate of the board and adds it to self.history"""
-        return NotImplemented
+        boardstate = {
+            "deck": self.deck[:],
+            "tableaus": [tab[:] for tab in self.tableaus],
+            "columns": [col[:] for col in self.columns],
+            "deals": self.deals,
+        }
+        self.history.append(boardstate)
 
     def load_board_state(self, boardstate):
-        """
-        Loads a boardstate
-        :param boardstate: (structure of this not yet decided)
-        :return: None
-        """
-        return NotImplemented
+        self.deck = boardstate["deck"][:]
+        self.tableaus = [tab[:] for tab in boardstate["tableaus"]]
+        self.columns = [col[:] for col in boardstate["columns"]]
+        self.deals = boardstate["deals"]
+
     # </editor-fold>
 
     # <editor-fold: Properties>
@@ -242,13 +335,12 @@ class GameBoard:
 
     # <editor-fold: Magic Methods>
     def __str__(self):
-        # TODO: Make this actually like, look right, add colors, print in the right orientation etc.
-        s = f"Russian Revolver Solitaire {self.deals=}"
-        for tab in self.tableaus:
-            s += f"{tab[-1]}"
-        for col in self.columns:
-            s += str(col) + '\n'
-        return s
+        strbrd = f"Russian Revolver Solitaire\nShuffles left: {self.deals}\n"
+        for i, col in enumerate(self.columns):
+            strbrd += f"Column {i+1}: {[str(card) for card in col]}\n"
+        for i, tab in enumerate(self.tableaus):
+            strbrd += f"Tableau {i+1}: {tab}\n"
+        return strbrd
 
 
     def __repr__(self):
@@ -288,12 +380,22 @@ class Card:
     @classmethod
     def new_deal(cls):
         # Creates a new deck
-        return [Card(rank, suit) for suit in cls.SUITS for rank in cls.PIPS]
+        return [cls(rank, suit) for suit in cls.SUITS for rank in cls.PIPS]
 
     @classmethod
     def get_varieties(cls):
         """Returns all possible combinations of suits and rank."""
         return [(rank, suit) for rank in cls.PIPS for suit in cls.SUIT]
+
+    @classmethod
+    def from_string(cls, target):
+        try:
+            rank, suit = target[:-1], target[-1]
+            if rank in cls.PIPS and suit in cls.SUITS:
+                return cls(rank,suit)
+        except:
+            pass
+        return None
 
     @property
     def rank(self):
