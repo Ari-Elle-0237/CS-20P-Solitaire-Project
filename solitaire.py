@@ -12,6 +12,8 @@ Exit Code: _
 import cards
 import color
 import pickle
+import copy
+
 
 class SolitaireUI:
     """
@@ -89,6 +91,11 @@ class SolitaireUI:
             print("Game loaded.")
         except Exception as e:
             print(f"Error loading game: {e}")
+
+    def shuffle(self):
+        self.game_board.gather_deck()
+        self.game_board.deal_cards()
+
 
     def exit(self):
         """exits the ui loop"""
