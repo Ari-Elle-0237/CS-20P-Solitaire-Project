@@ -30,28 +30,6 @@ class SolitaireUI:
             user_input = input("Enter A Command. (use 'help' for options.): ")
             self.process_command(user_input)
 
-    def process_command(self, user_input):
-        """
-        Breaks a string input into a command and arguments and sends that data to the appropriate function
-        Or if the command is malformed, enters a UI loop and returns an appropriate error
-
-        Could use regex? Would make it very resilient to typos, but it's definitely overkill.
-        """
-
-        commands = {
-            "exit": self.exit,
-            "help": self.help_message,
-            "shuf": self.shuffle,
-            "cheat": self.cheat,
-            "undo": self.undo,
-            "save": self.save_game,
-            "load": self.load_game,
-        }
-        if user_input in commands:
-            commands[user_input]()
-        else:
-            print("Invalid Command.")
-
     def help_message(self):
         print("Commands:")
         print(" help: show this message.")
@@ -93,14 +71,40 @@ class SolitaireUI:
             print(f"Error loading game: {e}")
 
     def shuffle(self):
-        self.game_board.gather_deck()
-        self.game_board.deal_cards()
+        if self.game_board.deals > 0:
+            self.game_board.gather_deck()
+            self.game_board.deal_cards()
+            self.game_board.deals -= 1
+        else:
+            print("No shuffles remaining.")
         
 
 
     def exit(self):
         """exits the ui loop"""
         self.running = False
+
+    def process_command(self, user_input):
+        """
+        Breaks a string input into a command and arguments and sends that data to the appropriate function
+        Or if the command is malformed, enters a UI loop and returns an appropriate error
+
+        Could use regex? Would make it very resilient to typos, but it's definitely overkill.
+        """
+
+        commands = {
+            "exit": self.exit,
+            "help": self.help_message,
+            "shuf": self.shuffle,
+            "cheat": self.cheat,
+            "undo": self.undo,
+            "save": self.save_game,
+            "load": self.load_game,
+        }
+        if user_input in commands:
+            commands[user_input]()
+        else:
+            print("Invalid Command.")
 
 class GameBoard:
     """
@@ -111,7 +115,7 @@ class GameBoard:
     def __init__(self):
         if self.COL_COUNT <= 0:
             raise ValueError("Column count must be greater than 0.")
-        
+
         self.deck = Card.new_deal() # Previously [Card(rank, suit) for rank, suit in Card.get_varieties()]
         cards.shuffle(self.deck)
         self.tableaus = [[] for _ in range(self.TAB_COUNT)]
@@ -373,7 +377,7 @@ class Card:
     @classmethod
     def new_deal(cls):
         # Creates a new deck
-        return [cls(rank, suit) for suit in cls.SUITS for rank in cls.PIPS]
+        return [cls(rank, suit) for suit in cls.SUIT for rank in cls.PIPS]
 
     @classmethod
     def get_varieties(cls):
@@ -384,7 +388,7 @@ class Card:
     def from_string(cls, target):
         try:
             rank, suit = target[:-1], target[-1]
-            if rank in cls.PIPS and suit in cls.SUITS:
+            if rank in cls.PIPS and suit in cls.SUIT:
                 return cls(rank,suit)
         except:
             pass
@@ -420,3 +424,9 @@ class Card:
             self._suit = '♣'
         else:
             raise ValueError("Unrecognized suit.")
+
+if __name__ == "__main__":
+    try:
+        SolitaireUI()
+    except Exception as e:
+        print(f"An error occurred: {e}")
