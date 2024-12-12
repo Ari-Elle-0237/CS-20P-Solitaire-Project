@@ -54,21 +54,22 @@ class SolitaireUI:
     def save_game(self):
         filename = input("Enter filename to save the gamestate to: ")
         # Using pickle - taken mostly from Python Documentation
-        try:
-            with open(filename, 'rb') as file:
-                pickle.dump(self.game_board, file)
-            print("Gamestate saved successfully.")
-        except Exception as e:
-            print(f"Error saving game: {e}")
+        # This try/except block seems unnecesary and too broad
+        # try:
+        with open(filename, 'wb') as file:
+            pickle.dump(self.game_board, file)
+        print("Gamestate saved successfully.")
+        # except Exception as e:
+        #     print(f"Error saving game: {e}")
 
     def load_game(self):
         filename = input("Enter filename to load the gamestate from: ")
-        try:
-            with open(filename, 'rb') as file:
-                self.game_board = pickle.load(file)
-            print("Game loaded.")
-        except Exception as e:
-            print(f"Error loading game: {e}")
+        # try:
+        with open(filename, 'rb') as file:
+            self.game_board = pickle.load(file)
+        print("Game loaded.")
+        # except Exception as e:
+            # print(f"Error loading game: {e}")
 
     def shuffle(self):
         if self.game_board.deals > 0:
@@ -88,11 +89,7 @@ class SolitaireUI:
         """
         Breaks a string input into a command and arguments and sends that data to the appropriate function
         Or if the command is malformed, enters a UI loop and returns an appropriate error
-
-        Could use regex? Would make it very resilient to typos, but it's definitely overkill.
         """
-
-
         commands = {
             "exit": self.exit,
             "help": self.help_message,
@@ -122,7 +119,8 @@ class SolitaireUI:
         else:
             print("Invalid Command.")
 
-    def normalize_card_input(self, card_input):
+    @staticmethod
+    def normalize_card_input(card_input):
         """
         Converts input like '8 h' or '8h' into a proper card string (e.g., '8♥').
         """
@@ -134,6 +132,7 @@ class SolitaireUI:
             return f"{rank}{suit_map.get(suit, '')}"
         return card_input
 
+    @staticmethod
     def parse_command(command):
         parts = command.strip().split()
         if len(parts) < 2:
@@ -156,17 +155,18 @@ class SolitaireUI:
             except ValueError:
                 return "Invalid column identifier."
 
-        return "Unknown destination type."
+        # return "Unknown destination type."
 
-    def execute_command(command_type, card, destination_number):
-        if command_type == "column":
-            # Move card to the column
-            move_to_column(card, destination_number)
-        elif command_type == "tableau":
-            # Move card to the tableau
-            move_to_tableau(card, destination_number)
-        else:
-            print("Invalid destination type.")
+    # This method appears to have no usages, I am unclear on what this is meant to do
+    # def execute_command(self, command_type, card, destination_number):
+    #     if command_type == "column":
+    #         # Move card to the column
+    #         move_to_column(card, destination_number)
+    #     elif command_type == "tableau":
+    #         # Move card to the tableau
+    #         move_to_tableau(card, destination_number)
+    #     else:
+    #         print("Invalid destination type.")
 
 
 class GameBoard:
@@ -187,11 +187,11 @@ class GameBoard:
         self.history = []
         self.deal_cards()
 
-
-    def update_card_visibility(self):
-        for column in self.columns:
-            for i, card in enumerate(column):
-                card.visible = i == len(column) - 1
+    # This is a duplicate definition
+    # def update_card_visibility(self):
+    #     for column in self.columns:
+    #         for i, card in enumerate(column):
+    #             card.visible = i == len(column) - 1
 
 
     def check_winstate(self):
@@ -239,14 +239,12 @@ class GameBoard:
 
         self.update_board()
 
-            '''
-            if col == 0 and len(self.columns[0]) >= 2: # TODO: Rephrase this to comply with class style guides
-                continue
-            self.columns[col].append(self.deck.pop()) # TODO: Need to test how pop() works
-            col += 1
-            col %= self.COL_COUNT
-             self.update_board()
-            '''
+            # if col == 0 and len(self.columns[0]) >= 2: # TODO: Rephrase this to comply with class style guides
+            #     continue
+            # self.columns[col].append(self.deck.pop()) # TODO: Need to test how pop() works
+            # col += 1
+            # col %= self.COL_COUNT
+            #  self.update_board()
 
 
 
@@ -277,6 +275,48 @@ class GameBoard:
             # Then, flip the last card in each row face up
             column[-1].visible = True
 
+
+    @staticmethod
+    def rotate_cw(array_2d):
+        """Rotates a 2 dimensional array 90 degrees clockwise, (gaps are filled with None)"""
+        # First turn the array into a quadrilateral by filling in gaps with None
+        array_2d = GameBoard.array_to_quad(array_2d)
+        # Rotate the Array
+        # (Source: https://stackoverflow.com/questions/8421337/rotating-a-two-dimensional-array-in-python)
+        array_2d = [list(r) for r in zip(*array_2d[::-1])]
+        # Then Prune the extra Nones (Commented out bc found out this makes other things easier)
+        # array_2d = GameBoard.prune_array(array_2d)
+        return array_2d
+
+    @staticmethod
+    def mirror_y_axis(array_2d):
+        """Mirrors a 2 dimensional array along the Y axis (gaps are filled with None)"""
+        # First turn the array into a quadrilateral by filling in gaps with None
+        array_2d = GameBoard.array_to_quad(array_2d)
+        # Mirror the array
+        array_2d = [i[::-1] for i in array_2d]
+        # Then Prune the extra Nones (Commented out bc found out this makes other things easier)
+        # array_2d = GameBoard.prune_array(array_2d)
+        return array_2d
+
+    @staticmethod
+    def array_to_quad(array_2d):
+        """Converts an uneven 2d array into a quadrilateral by filling in gaps with none
+        (helper function for mirror_y_axis, and rotate_cw)"""
+        max_width = max([len(row) for row in array_2d])
+        for row in array_2d:
+            for _ in range(max_width - len(row)):
+                row.append(None)
+        return array_2d
+
+    @staticmethod
+    def prune_array(array_2d):
+        """Removes trailing Nones from a 2d array (helper function for mirror_y_axis, and rotate_cw)"""
+        for row in array_2d:
+            while row[-1] is None:
+                row.pop()
+        return array_2d
+
     # </editor-fold>
 
     # <editor-fold: move() and move() helper functions>
@@ -288,22 +328,20 @@ class GameBoard:
         :return: None
         """
         card = Card.from_string(target)
-        '''
-        if card is None:
-            print(f"invalid card: {target}.")
-            return
-        if destination is None:
-            print("No destination.")
-            return
-        if destination < 0 or destination >= len(self.columns) + >= len(self.tableaus):
-            print("Invalid destination.")
-            return
-        if not self.valid_move(card, destination):
-            print(f"invalid move: {target} to {destination}")
-            return
-        self.columns[destination].append(card)
-        self.update_board()
-        '''
+        # if card is None:
+        #     print(f"invalid card: {target}.")
+        #     return
+        # if destination is None:
+        #     print("No destination.")
+        #     return
+        # if destination < 0 or destination >= len(self.columns) + >= len(self.tableaus):
+        #     print("Invalid destination.")
+        #     return
+        # if not self.valid_move(card, destination):
+        #     print(f"invalid move: {target} to {destination}")
+        #     return
+        # self.columns[destination].append(card)
+        # self.update_board()
         if not card:
             print("invalid card.")
             return False
@@ -354,7 +392,7 @@ class GameBoard:
         :param destination: Target column, if None, the destination is assumed to be a tableau
         :return: bool
         """
-        return NotImplemented
+        raise NotImplemented
 
     # </editor-fold>
 
@@ -383,35 +421,52 @@ class GameBoard:
 
     # </editor-fold>
 
-    # <editor-fold: Properties>
-    @property
-    def board(self):
-        return self._board
-
-    @board.setter
-    def board(self, value):
-        self._board = value
-    # </editor-fold>
+    # Unnecessary property declaration
+    # # <editor-fold: Properties>
+    # @property
+    # def board(self):
+    #     return self._board
+    #
+    # @board.setter
+    # def board(self, value):
+    #     self._board = value
+    # # </editor-fold>
 
     # <editor-fold: Magic Methods>
+    # def __str__(self):
+    #     s = f"Russian Revolver Solitaire\nShuffles left: {self.deals}\n"
+    #     for i, col in enumerate(self.columns):
+    #         s += f"Column {i+1}: {[str(card) for card in col]}\n"
+    #     for i, tab in enumerate(self.tableaus):
+    #         s += f"Tableau {i+1}: {tab}\n"
+    #     return s
+
     def __str__(self):
-        strbrd = f"Russian Revolver Solitaire\nShuffles left: {self.deals}\n"
-        for i, col in enumerate(self.columns):
-            strbrd += f"Column {i+1}: {[str(card) for card in col]}\n"
-        for i, tab in enumerate(self.tableaus):
-            strbrd += f"Tableau {i+1}: {tab}\n"
-        return strbrd
+        # TODO: Make this handle colors,
+        #  also maybe see about using f-string alignment instead of the janky predefined spaces in PIPS
+        self.update_card_visibility()
+        # Header
+        s = (f"Russian Revolver Solitaire  |  Deals:{self.deals}\n"
+             f"    ")
+        # Tableaus
+        for tab in self.tableaus:
+            s += f" {''.join([f"({tab[-1]})" if tab else f"(   )"])} "
+        s += ("\n"
+              "--------------------------------------\n")
+        # Columns
+        columns = self.mirror_y_axis(self.rotate_cw(self.columns))
+        for col in columns:
+             s += f"|{'|'.join([f" {card} " if card else f"     "for card in col])}|\n"
+        return s
 
 
-    def __repr__(self):
-        return NotImplemented
+    # def __repr__(self):
+    #     return NotImplemented
     # </editor-fold>
 
 
 class Card:
-    # TODO:
-    #  - Sanitize inputs
-    PIPS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
+    PIPS = [' A', ' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', '10', ' J', ' Q', ' K']
     SUIT = ['♠', '♦', '♥', '♣']
 
 
@@ -431,7 +486,7 @@ class Card:
             return f"{self.rank}{self.suit}"
         else:
             color.fgcolor(color.BLACK)
-            return "[X]"
+            return "[_]"
 
     def __repr__(self):
         # returns the rank and suit as a string hopefully
@@ -453,7 +508,7 @@ class Card:
             rank, suit = target[:-1], target[-1]
             if rank in cls.PIPS and suit in cls.SUIT:
                 return cls(rank,suit)
-        except:
+        except TypeError or IndexError:
             pass
         return None
 
@@ -470,13 +525,10 @@ class Card:
 
     @property
     def suit(self):
-        # TODO: implement input sanitization
         return self._suit
 
     @suit.setter
     def suit(self, value):
-        # TODO: sanitize inputs and translate synonyms to the appropriate unicode
-
         if value in ('S', 's', '♠'):
             self._suit = '♠'
         elif value in ('D', 'd', '♦'):
@@ -489,7 +541,7 @@ class Card:
             raise ValueError("Unrecognized suit.")
 
 if __name__ == "__main__":
-    try:
+    # try:
         SolitaireUI()
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    # except Exception as e:
+    #     print(f"An error occurred: {e}")
