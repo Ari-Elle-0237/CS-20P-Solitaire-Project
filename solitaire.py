@@ -44,8 +44,8 @@ class SolitaireUI:
             "shuf": self.shuffle,
             "cheat": self.cheat,
             "undo": self.undo,
-            "save": self.save,
-            "load": self.load,
+            "save": self.save_game,
+            "load": self.load_game,
         }
         if user_input in commands:
             commands[user_input]()
@@ -95,6 +95,7 @@ class SolitaireUI:
     def shuffle(self):
         self.game_board.gather_deck()
         self.game_board.deal_cards()
+        
 
 
     def exit(self):
@@ -104,15 +105,13 @@ class SolitaireUI:
 class GameBoard:
     """
     A class defining a solitaire board
-    TODO:
-    - Decide if it makes sense to make the board and the game separate classes
-    - Write unittests
-    - Fill in unimplemented functions
-    - Stretch goal: Add support for classic and spider solitaire rulesets
     """
     TAB_COUNT = 4 # Tableau Count
     COL_COUNT = 6 # Column Count
     def __init__(self):
+        if self.COL_COUNT <= 0:
+            raise ValueError("Column count must be greater than 0.")
+        
         self.deck = Card.new_deal() # Previously [Card(rank, suit) for rank, suit in Card.get_varieties()]
         cards.shuffle(self.deck)
         self.tableaus = [[] for _ in range(self.TAB_COUNT)]
@@ -183,22 +182,9 @@ class GameBoard:
             '''
 
 
+
+
     def gather_deck(self):
-        """Function that collects all cards on the board not in a tableau and shuffles them into the deck"""
-        """
-        Loop over all the columns
-        Copy their contents into self.deck
-        Clear them
-        Then Shuffle the deck
-        """
-        """
-        Before:
-        Columns = [[Card(),Card(),Card()],[Card(),...],[Card(),...],[]...]
-        Deck = [a list of things]
-        After:
-        Columns = [[],[],[],[],[],[]]
-        Deck = [a list of things, Card(),Card(),Card()...]
-        """
         for col in self.columns:
             self.deck += col
             col.clear()
