@@ -347,13 +347,13 @@ class GameBoard:
              f"    ")
         # Tableaus
         for tab in self.tableaus:
-            s += f" {''.join([f"({tab[-1]})" if tab else f"(   )"])} "
+            s += f" {''.join([f'({tab[-1]})' if tab else f'(   )'])} "
         s += ("\n"
               "--------------------------------------\n")
         # Columns
         columns = self.mirror_y_axis(self.rotate_cw(self.columns))
         for col in columns:
-             s += f"|{'|'.join([f" {card} " if card else f"     "for card in col])}|\n"
+             s += f"|{'|'.join([f' {card} ' if card else f'     'for card in col])}|\n"
         return s
     # </editor-fold>
 
