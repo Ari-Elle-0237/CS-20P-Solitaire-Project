@@ -386,6 +386,7 @@ class Card:
     SUIT = ['♠', '♦', '♥', '♣']
     BACK = "[_]"
     # Pattern Development at: https://regex101.com/r/vCMe6C/3
+    # Matches a string like "As" or "10♦" into named capture groups for rank and suit (see: rank_suit_from_regex())
     CARD_REGEX = re.compile(r"\b(?P<rank>[23456789AJQK]|10)(?P<suit>[SCHD♠♦♥♣])\b", flags=re.IGNORECASE)
     def __init__(self, rank: str, suit: str=None):
         if suit is None: # Allow for instantiation with only one argument
@@ -448,13 +449,15 @@ class Card:
 
     @rank.setter
     def rank(self, value: str):
-        """Case and whitespace insensitive, will always set a value from self.PIPS"""
+        """Case and whitespace insensitive, will always set a value from self.PIPS,
+           and can handle any output from rank_suit_from_regex()"""
         flattened_pips = [pip.strip().casefold() for pip in self.PIPS]
-        value = str(value.strip().casefold())
+        value = value.strip().casefold()
         if value in flattened_pips:
+            # I do not understand why there's a warn here on 'value' but it seems to work fine
             self._rank = self.PIPS[flattened_pips.index(value)]
         else:
-            raise ValueError("Invalid Rank.")
+            raise ValueError(f"Invalid Rank: {value}")
 
     @property
     def suit(self):
@@ -462,7 +465,8 @@ class Card:
 
     @suit.setter
     def suit(self, value: str):
-        """Case and whitespace insensitive, will always set a value from self.SUITS"""
+        """Case and whitespace insensitive, will always set a value from self.SUITS
+           and can handle any output from rank_suit_from_regex()"""
         value = value.strip().casefold()
         if value in ('s', '♠'):
             self._suit = '♠'
@@ -473,7 +477,9 @@ class Card:
         elif value in ('c','♣'):
             self._suit = '♣'
         else:
-            raise ValueError("Unrecognized suit.")
+            raise ValueError(f"Unrecognized suit: {value}")
     #</editor-fold>
+
+
 if __name__ == "__main__":
     SolitaireUI()
