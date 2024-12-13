@@ -422,16 +422,14 @@ class GameBoard:
             print("Card is not at the end of a column!")
             return False
         for tab in self.tableaus:  # Then search the tableaus for a match
-            try: # Try/except is defnitely not the cleanest solution here but Im getting tired
-                if (not tab and target_card.rank == Card.PIPS[0] or # If tab is empty, check if we have an Ace
-                    Card.PIPS.index(target_card.rank) - 1 == Card.PIPS.index(tab[-1].rank)): # otherwise match rank
-                    # Move and return if we find a match
-                    tab.append(self.columns[col].pop())
-                    self.update_board()
-                    self.save_board_state()
-                    return True
-            except IndexError:
-                pass
+            # If tab is empty, check if we have an Ace
+            if (not tab and target_card.rank == Card.PIPS[0] or # Otherwise check if rank is 1 less
+            tab and Card.PIPS.index(target_card.rank) - 1 == Card.PIPS.index(tab[-1].rank)):
+                # Move and return if we find a match
+                tab.append(self.columns[col].pop())
+                self.update_board()
+                self.save_board_state()
+                return True
         # Otherwise return False
         print("Card is not able to move to a tableau!")
         return False
