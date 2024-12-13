@@ -8,6 +8,7 @@ Repository at: https://github.com/Ari-Elle-0237/CS-20P-Solitaire-Project.git
 Due: Nov 28th 2024
 Exit Code: _
 """
+import re
 
 import cards
 import color
@@ -97,10 +98,11 @@ class SolitaireUI:
             return
         # Check for move commands: [card] [destination]
         parts = user_input.split()
+        print(parts)
         if len(parts) == 2:
             card_input, destination = parts
             card = Card.from_string(self.normalize_card_input(card_input))
-            if card and destination.isdigit():
+            if card is not None and destination.isdigit():
                 if self.game_board.move(card, int(destination) - 1):  # Adjust for 0-based index
                     print("Move successful.")
                 else:
@@ -162,16 +164,6 @@ class GameBoard:
         self.history = []
         self.deal_cards()
 
-    def check_winstate(self):
-        """
-        Check if the game has been won
-        Specifically, checks to see if all cards
-        are in piles.
-        :return: bool representing whether the game has been won
-        """
-        if all(len(column) == 0 for column in self.columns) and len(self.deck) == 0: # w3schools
-            print("Congratulations, you win!")
-
     def update_board(self):
         self.update_card_visibility()
         self.check_winstate()
@@ -201,6 +193,20 @@ class GameBoard:
     # </editor-fold>
 
     # <editor-fold: Updates and misc helper functions>
+    def check_winstate(self):
+        """
+        Check if the game has been won
+        Specifically, checks to see if all cards
+        are in piles.
+        :return: bool representing whether the game has been won
+        """
+        if all(len(column) == 0 for column in self.columns) and len(self.deck) == 0: # w3schools
+            print("Congratulations, you win!")
+
+    def update_board(self):
+        self.update_card_visibility()
+        self.check_winstate()
+
     def update_card_visibility(self):
         """Updates the board to make sure cards are facing up according to solitaire rules"""
         # Flip all cards face up
@@ -259,8 +265,9 @@ class GameBoard:
     # </editor-fold>
 
     # <editor-fold: move() and move() helper functions>
-    def move(self, target, destination):
+    def move(self, target: str, destination: int) -> bool:
         """
+        # TODO: Add a better description
         :param target: The card to be moved as specified by the user
         :param destination: The destination column as specified by to user
         :return: None
@@ -275,6 +282,12 @@ class GameBoard:
             print("Card not available for move.")
             return False
 
+        # This looks like it has several issues
+        # Does not seem to take the stack,
+        # seems to have off by one errors,
+        # order of operations errors,
+        # and might crash in some scenarios
+        # Needs to be investigated and unittested
         if destination < len(self.columns):
             column_top = self.columns[destination][-1] if self.columns[destination] else None
             if column_top is None:
@@ -284,7 +297,8 @@ class GameBoard:
                     self.columns[destination].append(card)
                     self.update_board()
                     return True
-            elif card.suit == column_top.suit and Card.PIPS.index(card.rank) == Card.PIPS.index(column_top.rank) - 1:
+            elif (card.suit == column_top.suit and
+                  Card.PIPS.index(card.rank) == Card.PIPS.index(column_top.rank) - 1):
                 self.save_board_state()
                 source_column.remove(card)
                 self.columns[destination].append(card)
@@ -292,7 +306,6 @@ class GameBoard:
                 return True
         print("Invalid move.")
         return False
-
     # def valid_move(self, card, destination):
     #     # TODO: It seems like there's likely a bug in this function, need to investigate
     #       We actually don't need this function it seems but it should be kept
@@ -348,8 +361,8 @@ class GameBoard:
         # Tableaus
         for tab in self.tableaus:
             s += f" {''.join([f'({tab[-1]})' if tab else f'(   )'])} "
-        s += ("\n"
-              "--------------------------------------\n")
+        # Divider/Column labels
+        s += f"\n---{'-----'.join([f'{i + 1}' for i,_ in enumerate(self.columns)])}---\n"
         # Columns
         columns = self.mirror_y_axis(self.rotate_cw(self.columns))
         for col in columns:
@@ -361,8 +374,10 @@ class GameBoard:
 class Card:
     PIPS = [' A', ' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', '10', ' J', ' Q', ' K']
     SUIT = ['♠', '♦', '♥', '♣']
+    # Pattern Development at: https://regex101.com/r/vCMe6C/3
+    CARD_REGEX = re.compile(r"\b(?P<rank>[23456789AJQK]|10)(?P<suit>[SCHD♠♦♥♣])\b", flags=re.IGNORECASE)
     def __init__(self, rank, suit):
-        self.rank = rank # Some number between 1 and 13.
+        self.rank = rank
         self.suit = suit
         self.visible = True
 
@@ -370,6 +385,7 @@ class Card:
         """Flips the card over"""
         self.visible = not self.visible
 
+    # <editor-fold: magic methods>
     def __str__(self):
         # returns the rank and suit as a string hopefully
         if self.visible:
@@ -379,10 +395,15 @@ class Card:
             color.fgcolor(color.BLACK)
             return "[_]"
 
-    def __repr__(self):
-        # returns the rank and suit as a string hopefully
-        return str(self)
+    def __eq__(self, other):
+        try:
+            return (self.rank == other.rank and
+                    self.suit == other.suit)
+        except AttributeError:
+            return self == Card.from_string(other)
+    # </editor-fold>
 
+    # <editor-fold: classmethods>
     @classmethod
     def new_deal(cls):
         # Creates a new deck
@@ -393,24 +414,34 @@ class Card:
         """Returns all possible combinations of suits and rank."""
         return [(rank, suit) for rank in cls.PIPS for suit in cls.SUIT]
 
-    @classmethod
-    def from_string(cls, target):
-        try:
-            rank, suit = target[:-1], target[-1]
-            if rank in cls.PIPS and suit in cls.SUIT:
-                return cls(rank,suit)
-        except TypeError or IndexError:
-            pass
-        return None
+    # @classmethod
+    # def from_string(cls, target):
+    #     try:
+    #         rank, suit = target[:-1], target[-1]
+    #         if rank in cls.PIPS and suit in cls.SUIT:
+    #             return cls(rank, suit)
+    #     except TypeError or IndexError:
+    #         pass
+    #     return None
 
+    @staticmethod
+    def from_string(string: str):
+        """Assembles a Card() object from a string"""
+        m = re.match(Card.CARD_REGEX, string)
+        return Card(m.group("rank"), m.group("suit"))
+    #</editor-fold>
+
+    # <editor-fold: Properties>
     @property
     def rank(self):
         return self._rank
 
     @rank.setter
     def rank(self, value):
-        if value in Card.PIPS:
-            self._rank = value
+        flattened_pips = [pip.strip().casefold() for pip in self.PIPS]
+        value = value.casefold()
+        if value in flattened_pips:
+            self._rank = self.PIPS[flattened_pips.index(value)]
         else:
             raise ValueError("Invalid Rank.")
 
@@ -430,6 +461,6 @@ class Card:
             self._suit = '♣'
         else:
             raise ValueError("Unrecognized suit.")
-
+    #</editor-fold>
 if __name__ == "__main__":
     SolitaireUI()
