@@ -6,15 +6,13 @@ Pengo: 'azepezau' & 'araggio'
 Test Cases in unittest_.py
 Repository at: https://github.com/Ari-Elle-0237/CS-20P-Solitaire-Project.git
 Due: Nov 28th 2024
-Exit Code: _
+Exit Code: 0
 """
 import re
-
-from numpy.ma.extras import column_stack
-
 import cards
 import color
 import pickle
+import enum
 import copy
 
 class Card:
@@ -159,6 +157,7 @@ class SolitaireUI:
         filename = input("Enter filename to save the gamestate to: ")
         # Using pickle - taken mostly from Python Documentation
         with open(filename, 'wb') as file:
+            # Can't tell why theres a warn here, seems to behave fine
             pickle.dump(self.game_board, file)
         print("Gamestate saved successfully.")
 
@@ -207,20 +206,6 @@ class SolitaireUI:
             return
         # Otherwise send it ahead
         self.game_board.move(*arguments)
-
-    # Removed as regex makes this redundant
-    # @staticmethod
-    # def normalize_card_input(card_input):
-    #     """
-    #     Converts input like '8 h' or '8h' into a proper card string (e.g., '8♥').
-    #     """
-    #     card_input = card_input.strip().replace(" ", "")
-    #     if len(card_input) > 1:
-    #         rank = card_input[:-1]
-    #         suit = card_input[-1].lower()
-    #         suit_map = {'s': '♠', 'h': '♥', 'd': '♦', 'c': '♣'}
-    #         return f"{rank}{suit_map.get(suit, '')}"
-    #     return card_input
 
     def parse_move_command(self, user_input:str)-> tuple[Card, int|None]|None:
         """Sanitizes a user input to be passed to move(),
@@ -321,7 +306,9 @@ class GameBoard:
         """
         if all(len(column) == 0 for column in self.columns) and len(self.deck) == 0: # w3schools
             print("Congratulations, you win!")
-            return True
+            # TODO: Make this end the game with something nicer than raising an Interrupt
+            raise InterruptedError("You won!") # Temporary solution
+            # return True
         return False
 
     def update_card_visibility(self):
@@ -443,26 +430,6 @@ class GameBoard:
                 if card.visible and card == target_card:
                     return j, i
         raise ValueError(f"Card {target_card} not found or not available for move.")
-
-
-    # def valid_move(self, card, destination):
-    #     # TODO: It seems like there's likely a bug in this function, need to investigate
-    #       We actually don't need this function it seems but it should be kept
-    #       in place as a safeguard if we ever need it.
-    #     if destination in range(len(self.tableaus)):
-    #         tableau_top = self.tableaus[destination][-1] if self.tableaus[destination] else None
-    #         if tableau_top is None:
-    #             return card.rank == 'A'
-    #         return card.suit == tableau_top.suit and card.rank == card.PIPS[Card.PIPS.index(tableau_top.rank) + 1]
-    #
-    #     elif destination in range(len(self.columns)):
-    #         column = self.columns[destination]
-    #         column_top = column[-1] if column else None
-    #         if not column_top:
-    #             return card.rank == 'K'
-    #         return card.suit == column_top.suit and Card.PIPS.index(card.rank) == Card.PIPS.index(column_top.rank) - 1
-    #     else:
-    #         return False
     # </editor-fold>
 
     # <editor-fold: undo() and savestate functions>
@@ -496,7 +463,8 @@ class GameBoard:
         # TODO: Make this handle colors,
         #  also maybe see about using f-string alignment instead of the janky predefined spaces in PIPS
         # (I suspect that it may be necessary to use a separate print_board() method to handle colors,
-        # but I have not studied how they work much, and I also can't get it to work at all on Windows)
+        # but I have not studied how they work much, and I also can't get it to work at all on Windows,
+        # I think this needs to be tested on Pengo)
         self.update_card_visibility()
         # Header
         s = (f"Russian Revolver Solitaire  |  Deals:{self.deals}\n"
@@ -512,8 +480,6 @@ class GameBoard:
              s += f"|{'|'.join([f' {card} ' if card else f'     'for card in col])}|\n"
         return s
     # </editor-fold>
-
-
 
 
 if __name__ == "__main__":
