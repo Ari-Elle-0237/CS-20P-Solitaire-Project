@@ -9,7 +9,6 @@ Due: Nov 28th 2024
 Exit Code: _
 """
 import re
-
 import cards
 import color
 import pickle
@@ -17,11 +16,9 @@ import copy
 
 
 class SolitaireUI:
-    """
-    A class for the UI
-    """
+    """A class for the UI and manual save/load features, should not handle any game logic"""
     def __init__(self):
-        self.running = True # To be used in exit function - not yet implemented
+        self.running = True
         self.game_board = GameBoard()
         self.main_ui_loop()
 
@@ -77,6 +74,10 @@ class SolitaireUI:
     def exit(self):
         """exits the ui loop"""
         self.running = False
+
+    # def exit(self):
+    #     """exits the ui loop (NS if raising interrupt is the best way to do this but it does technically work)"""
+    #     raise InterruptedError("Game Exited by Command")
 
     def process_command(self, user_input):
         """
@@ -151,25 +152,32 @@ class SolitaireUI:
 
 class GameBoard:
     """
-    A class defining a solitaire board
+    A class defining a solitaire board, handles all game logic, but not the UI
+
+    Note from Ari: I did not realize until far too late that Tableau is actually also meant to refer to
+    "tableau columns", and what I'm using the term for here should actually be called "foundation piles"
+    however the symmetry of tab and col both being 3 characters makes the code look neat so I have decided
+    not to fix this.
     """
     TAB_COUNT = 4 # Tableau Count
     COL_COUNT = 6 # Column Count
     def __init__(self):
-        self.deck = Card.new_deal() # Previously [Card(rank, suit) for rank, suit in Card.get_varieties()]
+        # Generate a new 52 card deck
+        self.deck = Card.new_deal()
         cards.shuffle(self.deck)
+        # Set starting values
         self.tableaus = [[] for _ in range(self.TAB_COUNT)]
         self.columns =  [[] for _ in range(self.COL_COUNT)]
         self.deals = 6
         self.history = []
+        # And begin
         self.deal_cards()
-
-    def update_board(self):
-        self.update_card_visibility()
-        self.check_winstate()
 
     # <editor-fold: Setup functions>
     def deal_cards(self):
+        """Takes the contents of the deck and then deals them onto the board according to Russian Revolver rules"""
+       # TODO: This seems to work fine, but it needs commenting
+       # TODO: And a unittest to verify it handles smaller deck sizes according to the rules without error
         for _ in range(min(2, len(self.deck))):
             card = self.deck.pop()
             card.visible = True
@@ -186,6 +194,7 @@ class GameBoard:
         self.update_board()
 
     def gather_deck(self):
+        """Moves the contents of all columns on the board into the deck, and then shuffles it"""
         for col in self.columns:
             self.deck += col
             col.clear()
@@ -193,17 +202,18 @@ class GameBoard:
     # </editor-fold>
 
     # <editor-fold: Updates and misc helper functions>
-    def check_winstate(self):
+    def check_winstate(self) -> bool:
         """
-        Check if the game has been won
-        Specifically, checks to see if all cards
-        are in piles.
+        Check if the game has been won by checking if all cards are in piles.
         :return: bool representing whether the game has been won
         """
         if all(len(column) == 0 for column in self.columns) and len(self.deck) == 0: # w3schools
             print("Congratulations, you win!")
+            return True
+        return False
 
     def update_board(self):
+        """Bundles checks that need to be regularly performed on the board"""
         self.update_card_visibility()
         self.check_winstate()
 
@@ -223,30 +233,26 @@ class GameBoard:
             column[-1].visible = True
 
     @staticmethod
-    def rotate_cw(array_2d):
-        """Rotates a 2 dimensional array 90 degrees clockwise, (gaps are filled with None)"""
+    def rotate_cw(array_2d: list[list]) -> list[list]:
+        """Rectangularizes and rotates a 2 dimensional array 90 degrees clockwise, (gaps are filled with None)"""
         # First turn the array into a quadrilateral by filling in gaps with None
         array_2d = GameBoard.array_to_quad(array_2d)
         # Rotate the Array
         # (Source: https://stackoverflow.com/questions/8421337/rotating-a-two-dimensional-array-in-python)
         array_2d = [list(r) for r in zip(*array_2d[::-1])]
-        # Then Prune the extra Nones (Commented out bc found out this makes other things easier)
-        # array_2d = GameBoard.prune_array(array_2d)
         return array_2d
 
     @staticmethod
-    def mirror_y_axis(array_2d):
-        """Mirrors a 2 dimensional array along the Y axis (gaps are filled with None)"""
+    def mirror_y_axis(array_2d: list[list]) -> list[list]:
+        """Rectangularizes and mirrors a 2 dimensional array along the Y axis (gaps are filled with None)"""
         # First turn the array into a quadrilateral by filling in gaps with None
         array_2d = GameBoard.array_to_quad(array_2d)
         # Mirror the array
         array_2d = [i[::-1] for i in array_2d]
-        # Then Prune the extra Nones (Commented out bc found out this makes other things easier)
-        # array_2d = GameBoard.prune_array(array_2d)
         return array_2d
 
     @staticmethod
-    def array_to_quad(array_2d):
+    def array_to_quad(array_2d: list[list]) -> list[list]:
         """Converts an uneven 2d array into a quadrilateral by filling in gaps with none
         (helper function for mirror_y_axis, and rotate_cw)"""
         max_width = max([len(row) for row in array_2d])
@@ -256,8 +262,9 @@ class GameBoard:
         return array_2d
 
     @staticmethod
-    def prune_array(array_2d):
+    def prune_array(array_2d: list[list]) -> list[list]:
         """Removes trailing Nones from a 2d array (helper function for mirror_y_axis, and rotate_cw)"""
+        # TODO: Check if there is a bug here when the entire list is Nones
         for row in array_2d:
             while row[-1] is None:
                 row.pop()
@@ -265,7 +272,7 @@ class GameBoard:
     # </editor-fold>
 
     # <editor-fold: move() and move() helper functions>
-    def move(self, target: str, destination: int) -> bool:
+    def move(self, target, destination: int) -> bool:
         """
         # TODO: Add a better description
         :param target: The card to be moved as specified by the user
@@ -328,6 +335,7 @@ class GameBoard:
 
     # <editor-fold: undo() and savestate functions>
     def undo(self):
+        """Reverses the last move via pop() from self.history"""
         if self.history:
             boardstate = self.history.pop()
             self.load_board_state(boardstate)
@@ -352,6 +360,7 @@ class GameBoard:
 
     # <editor-fold: Magic Methods>
     def __str__(self):
+        """Prints the board similar to assignment specs by rotating self.columns"""
         # TODO: Make this handle colors,
         #  also maybe see about using f-string alignment instead of the janky predefined spaces in PIPS
         self.update_card_visibility()
@@ -372,8 +381,10 @@ class GameBoard:
 
 
 class Card:
+    """Class for a standard playing card, includes ability to set faceup/down and utils for generating cards"""
     PIPS = [' A', ' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', '10', ' J', ' Q', ' K']
     SUIT = ['♠', '♦', '♥', '♣']
+    BACK = "[_]"
     # Pattern Development at: https://regex101.com/r/vCMe6C/3
     CARD_REGEX = re.compile(r"\b(?P<rank>[23456789AJQK]|10)(?P<suit>[SCHD♠♦♥♣])\b", flags=re.IGNORECASE)
     def __init__(self, rank: str, suit: str=None):
@@ -382,21 +393,22 @@ class Card:
         else:
             self.rank = rank
             self.suit = suit
+        # Cards begin face up
         self.visible = True
 
     def flip(self):
-        """Flips the card over"""
+        """Flips the card over by toggling self.visible"""
         self.visible = not self.visible
 
     # <editor-fold: magic methods>
     def __str__(self):
-        # returns the rank and suit as a string hopefully
+        """Prints rank/suit if visible otherwise prints Card.BACK, applying the correct color based on suit"""
         if self.visible:
             color.fgcolor(color.RED if self.suit in {'♦', '♥'} else color.BLACK)
             return f"{self.rank}{self.suit}"
         else:
             color.fgcolor(color.BLACK)
-            return "[_]"
+            return Card.BACK
 
     def __eq__(self, other):
         """Can Match other Card() objects, and autoapplies Card.from_string() for strings"""
@@ -409,9 +421,9 @@ class Card:
 
     # <editor-fold: staticmethods>
     @staticmethod
-    def new_deal():
-        # Creates a new deck
-        return [Card(rank, suit) for suit in Card.SUIT for rank in Card.PIPS]
+    def new_deal() -> list:
+        """Like get_varieties(), but creates Card() objects instead, thus generating a standard 52 card deck"""
+        return [Card(rank, suit) for rank, suit in Card.get_varieties()]
 
     @staticmethod
     def get_varieties():
@@ -436,6 +448,7 @@ class Card:
 
     @rank.setter
     def rank(self, value: str):
+        """Case and whitespace insensitive, will always set a value from self.PIPS"""
         flattened_pips = [pip.strip().casefold() for pip in self.PIPS]
         value = str(value.strip().casefold())
         if value in flattened_pips:
@@ -448,14 +461,16 @@ class Card:
         return self._suit
 
     @suit.setter
-    def suit(self, value):
-        if value in ('S', 's', '♠'):
+    def suit(self, value: str):
+        """Case and whitespace insensitive, will always set a value from self.SUITS"""
+        value = value.strip().casefold()
+        if value in ('s', '♠'):
             self._suit = '♠'
-        elif value in ('D', 'd', '♦'):
+        elif value in ('d', '♦'):
             self._suit = '♦'
-        elif value in ('H', 'h', '♥'):
+        elif value in ('h', '♥'):
             self._suit = '♥'
-        elif value in ('C','c','♣'):
+        elif value in ('c','♣'):
             self._suit = '♣'
         else:
             raise ValueError("Unrecognized suit.")
