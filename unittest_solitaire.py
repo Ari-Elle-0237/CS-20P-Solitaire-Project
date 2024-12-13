@@ -41,7 +41,14 @@ class RussianRevolverTestCase(unittest.TestCase):
             self.assertEqual(print(c), f"Rank:{card[0]} Suit:{card[1]}, Face:\'up\'")
 
     def test_from_string(self):
+        # TODO: Make more robust
         self.assertEqual(sol.Card.from_string("As"), sol.Card("A","s"))
+
+    def test__eq__(self):
+        self.assertEqual(sol.Card("A","s"), sol.Card("A", "s"))
+        self.assertEqual(sol.Card("A", "s"), "As")
+        self.assertEqual(sol.Card("As"), "As")
+
 
     #SUIT = ['♠', '♦', '♥', '♣']
     def test_suit_setter(self):
@@ -52,7 +59,6 @@ class RussianRevolverTestCase(unittest.TestCase):
             '♣':'♣', 'c':'♣', 'C':'♣'
         }
 
-
         for rank in ['A ', '2 ', '3 ', '4 ', '5 ', '6 ', '7 ', '8 ', '9 ', '10', 'J ', 'Q ', 'K ']:
             for key in testSuits.keys():
                 card = sol.Card(rank, key)
@@ -62,12 +68,12 @@ class RussianRevolverTestCase(unittest.TestCase):
         # Takes an invalid suit and asserts a ValueError through the format 'self.assertraises(value, error)'
 
     def test_process_command(self):
-        return NotImplemented
+        raise NotImplemented
 
     def test_colors(self):
         #firstCard = sol.Card('A', '♥')
         #secondCard = sol.Card('K', '♠')
-        return NotImplemented
+        raise NotImplemented
 
 
 

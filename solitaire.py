@@ -376,9 +376,12 @@ class Card:
     SUIT = ['♠', '♦', '♥', '♣']
     # Pattern Development at: https://regex101.com/r/vCMe6C/3
     CARD_REGEX = re.compile(r"\b(?P<rank>[23456789AJQK]|10)(?P<suit>[SCHD♠♦♥♣])\b", flags=re.IGNORECASE)
-    def __init__(self, rank, suit):
-        self.rank = rank
-        self.suit = suit
+    def __init__(self, rank: str, suit: str=None):
+        if suit is None: # Allow for instantiation with only one argument
+            self.rank, self.suit = self.rank_suit_from_regex(rank)
+        else:
+            self.rank = rank
+            self.suit = suit
         self.visible = True
 
     def flip(self):
@@ -396,6 +399,7 @@ class Card:
             return "[_]"
 
     def __eq__(self, other):
+        """Can Match other Card() objects, and autoapplies Card.from_string() for strings"""
         try:
             return (self.rank == other.rank and
                     self.suit == other.suit)
@@ -403,32 +407,26 @@ class Card:
             return self == Card.from_string(other)
     # </editor-fold>
 
-    # <editor-fold: classmethods>
-    @classmethod
-    def new_deal(cls):
+    # <editor-fold: staticmethods>
+    @staticmethod
+    def new_deal():
         # Creates a new deck
-        return [cls(rank, suit) for suit in cls.SUIT for rank in cls.PIPS]
+        return [Card(rank, suit) for suit in Card.SUIT for rank in Card.PIPS]
 
-    @classmethod
-    def get_varieties(cls):
+    @staticmethod
+    def get_varieties():
         """Returns all possible combinations of suits and rank."""
-        return [(rank, suit) for rank in cls.PIPS for suit in cls.SUIT]
-
-    # @classmethod
-    # def from_string(cls, target):
-    #     try:
-    #         rank, suit = target[:-1], target[-1]
-    #         if rank in cls.PIPS and suit in cls.SUIT:
-    #             return cls(rank, suit)
-    #     except TypeError or IndexError:
-    #         pass
-    #     return None
+        return [(rank, suit) for rank in Card.PIPS for suit in Card.SUIT]
 
     @staticmethod
     def from_string(string: str):
         """Assembles a Card() object from a string"""
+        return Card(*Card.rank_suit_from_regex(string))
+
+    @staticmethod
+    def rank_suit_from_regex(string:str)->tuple[str, str]:
         m = re.match(Card.CARD_REGEX, string)
-        return Card(m.group("rank"), m.group("suit"))
+        return m.group("rank"), m.group("suit")
     #</editor-fold>
 
     # <editor-fold: Properties>
