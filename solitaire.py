@@ -9,10 +9,115 @@ Due: Nov 28th 2024
 Exit Code: _
 """
 import re
+
+from numpy.ma.extras import column_stack
+
 import cards
 import color
 import pickle
 import copy
+
+class Card:
+    """Class for a standard playing card, includes ability to set faceup/down and utils for generating cards"""
+    PIPS = [' A', ' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', '10', ' J', ' Q', ' K']
+    SUIT = ['♠', '♦', '♥', '♣']
+    BACK = "[_]"
+    # Pattern Development at: https://regex101.com/r/vCMe6C/3
+    # Matches a string like "As" or "10♦" into named capture groups for rank and suit (see: rank_suit_from_regex())
+    CARD_REGEX = re.compile(r"\b(?P<rank>[23456789AJQK]|10)(?P<suit>[SCHD♠♦♥♣])\b", flags=re.IGNORECASE)
+    def __init__(self, rank: str, suit: str=None):
+        if suit is None: # Allow for instantiation with only one argument
+            self.rank, self.suit = self.rank_suit_from_regex(rank)
+        else:
+            self.rank = rank
+            self.suit = suit
+        # Cards begin face up
+        self.visible = True
+
+    def flip(self):
+        """Flips the card over by toggling self.visible"""
+        self.visible = not self.visible
+
+    # <editor-fold: magic methods>
+    def __str__(self):
+        """Prints rank/suit if visible otherwise prints Card.BACK, applying the correct color based on suit"""
+        if self.visible:
+            color.fgcolor(color.RED if self.suit in {'♦', '♥'} else color.BLACK)
+            return f"{self.rank}{self.suit}"
+        else:
+            color.fgcolor(color.BLACK)
+            return Card.BACK
+
+    def __eq__(self, other):
+        """Can Match other Card() objects, and autoapplies Card.from_string() for strings"""
+        try:
+            return (self.rank == other.rank and
+                    self.suit == other.suit)
+        except AttributeError:
+            return self == Card.from_string(other)
+    # </editor-fold>
+
+    # <editor-fold: staticmethods>
+    @staticmethod
+    def new_deal() -> list:
+        """Like get_varieties(), but creates Card() objects instead, thus generating a standard 52 card deck"""
+        return [Card(rank, suit) for rank, suit in Card.get_varieties()]
+
+    @staticmethod
+    def get_varieties():
+        """Returns all possible combinations of suits and rank."""
+        return [(rank, suit) for rank in Card.PIPS for suit in Card.SUIT]
+
+    @staticmethod
+    def from_string(string: str):
+        """Assembles a Card() object from a string"""
+        return Card(*Card.rank_suit_from_regex(string))
+
+    @staticmethod
+    def rank_suit_from_regex(string:str)->tuple[str, str]:
+        m = re.match(Card.CARD_REGEX, string)
+        if not m:
+            raise TypeError(f"Could not form card from user input {string}")
+        return m.group("rank"), m.group("suit")
+    #</editor-fold>
+
+    # <editor-fold: Properties>
+    @property
+    def rank(self):
+        return self._rank
+
+    @rank.setter
+    def rank(self, value: str):
+        """Case and whitespace insensitive, will always set a value from self.PIPS,
+           and can handle any output from rank_suit_from_regex()"""
+        flattened_pips = [pip.strip().casefold() for pip in self.PIPS]
+        value = value.strip().casefold()
+        if value in flattened_pips:
+            # I do not understand why there's a warn here on 'value' but it seems to work fine
+            self._rank = self.PIPS[flattened_pips.index(value)]
+        else:
+            raise ValueError(f"Invalid Rank: {value}")
+
+    @property
+    def suit(self):
+        return self._suit
+
+    @suit.setter
+    def suit(self, value: str):
+        """Case and whitespace insensitive, will always set a value from self.SUITS
+           and can handle any output from rank_suit_from_regex()"""
+        value = value.strip().casefold()
+        if value in ('s', '♠'):
+            self._suit = '♠'
+        elif value in ('d', '♦'):
+            self._suit = '♦'
+        elif value in ('h', '♥'):
+            self._suit = '♥'
+        elif value in ('c','♣'):
+            self._suit = '♣'
+        else:
+            raise ValueError(f"Unrecognized suit: {value}")
+    #</editor-fold>
 
 
 class SolitaireUI:
@@ -75,16 +180,15 @@ class SolitaireUI:
         """exits the ui loop"""
         self.running = False
 
-    # def exit(self):
-    #     """exits the ui loop (NS if raising interrupt is the best way to do this but it does technically work)"""
-    #     raise InterruptedError("Game Exited by Command")
-
-    def process_command(self, user_input):
+    def process_command(self, user_input: str):
         """
         Breaks a string input into a command and arguments and sends that data to the appropriate function
-        Or if the command is malformed, enters a UI loop and returns an appropriate error
+        Acts only as a redirect, should not handle any actual logic
+        (case/whitespace insensitive)
         """
-        commands = {
+        user_input = user_input.strip().casefold()
+        # Simple command dict (commands without arguments)
+        COMMANDS = {
             "exit": self.exit,
             "help": self.help_message,
             "shuf": self.shuffle,
@@ -93,61 +197,64 @@ class SolitaireUI:
             "save": self.save_game,
             "load": self.load_game,
         }
-        # Check for simple commands
-        if user_input in commands:
-            commands[user_input]()
+        # Check against our dict of simple commands to see if we can just execute it immediately and return early
+        if user_input in COMMANDS:
+            COMMANDS[user_input]()
             return
-        # Check for move commands: [card] [destination]
-        parts = user_input.split()
-        print(parts)
-        if len(parts) == 2:
-            card_input, destination = parts
-            card = Card.from_string(self.normalize_card_input(card_input))
-            if card is not None and destination.isdigit():
-                if self.game_board.move(card, int(destination) - 1):  # Adjust for 0-based index
-                    print("Move successful.")
-                else:
-                    print("Invalid move.")
-            else:
-                print("Invalid command format.")
-        else:
-            print("Invalid Command.")
+        # If not, assume we're moving a card and prepare to pass it along to move() using parse_command()
+        arguments = self.parse_move_command(user_input)
+        if arguments is None: # If malformed return early
+            return
+        # Otherwise send it ahead
+        self.game_board.move(*arguments)
 
-    @staticmethod
-    def normalize_card_input(card_input):
-        """
-        Converts input like '8 h' or '8h' into a proper card string (e.g., '8♥').
-        """
-        card_input = card_input.strip().replace(" ", "")
-        if len(card_input) > 1:
-            rank = card_input[:-1]
-            suit = card_input[-1].lower()
-            suit_map = {'s': '♠', 'h': '♥', 'd': '♦', 'c': '♣'}
-            return f"{rank}{suit_map.get(suit, '')}"
-        return card_input
+    # Removed as regex makes this redundant
+    # @staticmethod
+    # def normalize_card_input(card_input):
+    #     """
+    #     Converts input like '8 h' or '8h' into a proper card string (e.g., '8♥').
+    #     """
+    #     card_input = card_input.strip().replace(" ", "")
+    #     if len(card_input) > 1:
+    #         rank = card_input[:-1]
+    #         suit = card_input[-1].lower()
+    #         suit_map = {'s': '♠', 'h': '♥', 'd': '♦', 'c': '♣'}
+    #         return f"{rank}{suit_map.get(suit, '')}"
+    #     return card_input
 
-    @staticmethod
-    def parse_command(command):
-        parts = command.strip().split()
-        if len(parts) < 2:
-            return "Invalid command format."
-
-        # Extract card, destination type, and number
-        card = parts[0]  # Card to move (e.g., 'ah' or '10c')
-        destination = parts[1]  # Destination identifier
-
-        if destination.startswith('t'):  # Tableau destination
-            try:
-                tableau_number = int(destination[1:])
-                return "tableau", card, tableau_number
-            except ValueError:
-                return "Invalid tableau identifier."
-        else:  # Assume column destination
-            try:
-                column_number = int(destination)
-                return "column", card, column_number
-            except ValueError:
-                return "Invalid column identifier."
+    def parse_move_command(self, user_input:str)-> tuple[Card, int|None]|None:
+        """Sanitizes a user input to be passed to move(),
+           returns None and prints an error message if malformed"""
+        arguments = user_input.strip().casefold().split(" ")
+        # First verify appropriate argument signature
+        if len(arguments) == 0:
+            print("No command given")
+            return None
+        if len(arguments) > 2:
+            print(f"Malformed command, too many arguments given. Expected 1 or 2, "
+                  f"Instead Got {len(arguments)}: {arguments}\n")
+            return None
+        # Then try to convert the first argument into a Card() object which represents the card to be moved
+        target_card = arguments[0]
+        try:
+            target_card = Card(target_card)
+        except TypeError as e: # Print an error if we fail and return None
+            print(e)
+            return None
+        # If the second argument is not given, destination is set to None,
+        if len(arguments) == 1:
+            destination = None
+            return target_card, destination
+        # Otherwise check if it's an integer in the appropriate range representing a destination column
+        destination = arguments[1]
+        if destination.isdigit() and 1 <= int(destination) <= self.game_board.COL_COUNT:
+            destination = int(destination) # If we succeed we can return and pass it along
+            return target_card, destination - 1 # (Subtracting one to account for 0-indexing)
+        else: # Otherwise error out
+            print(f"Malformed command, Could not recognize user input, expected an integer between 1 and "
+                  f"{self.game_board.COL_COUNT} or None.\n"
+                  f"Instead got: {destination}")
+            return None
 
 
 class GameBoard:
@@ -202,6 +309,11 @@ class GameBoard:
     # </editor-fold>
 
     # <editor-fold: Updates and misc helper functions>
+    def update_board(self):
+        """Bundles checks that need to be regularly performed on the board"""
+        self.update_card_visibility()
+        self.check_winstate()
+
     def check_winstate(self) -> bool:
         """
         Check if the game has been won by checking if all cards are in piles.
@@ -211,11 +323,6 @@ class GameBoard:
             print("Congratulations, you win!")
             return True
         return False
-
-    def update_board(self):
-        """Bundles checks that need to be regularly performed on the board"""
-        self.update_card_visibility()
-        self.check_winstate()
 
     def update_card_visibility(self):
         """Updates the board to make sure cards are facing up according to solitaire rules"""
@@ -272,69 +379,74 @@ class GameBoard:
     # </editor-fold>
 
     # <editor-fold: move() and move() helper functions>
-    def move(self, target, destination: int) -> bool:
+    def move(self, target_card: Card, destination:int=None) -> bool:
         """
-        Attempts to move a card from its current column to a specified destination.
-
-        Params:
-        Target: the card to be moved, specified as a string ("AH, 5s, 10♠")
-        destination: the place the card will be moved to.
-
-        return true if move succeeds.
-        False if an error occurs or move is invalid.
-
-        Converts 'target' into a card object, locates its current column, ensures card is valid for use,
-        regarding its visibility and availability.
-            - destination column must be empty, card must be a king to start a new pile.
-            - otherwise. card must follow rank and suit compatibility rules.
-
-        Potential off by one errors.
-        does not handle moving stacks of cards.
-        assumes card stacks are organized according to solitaire rules.
+        Attempts to move a card stack from its current column to a specified
+        destination column according to Russian Revolver rules
+        :param destination: int: an integer from 0 to 5 (inclusive) representing
+        :param target_card: Card: a Card() object determining the move
+        :return bool: boolean representing whether the move was successful
+        (Input sanitization can be found in Solitaire_UI.parse_move_command())
         """
-        # Convert the target string to a Card object.
-        card = Card.from_string(target)
-        if not card: # checks for card parse-ability.
-            print("invalid card.")
-            return False
-
-        source_column = next((col for col in self.columns if card in col), None)
-        if not source_column or not card.visible: # Checks to see if the card is available to move according to game rules.
-            print("Card not available for move.")
-            return False
-
-        # This looks like it has several issues
-        # Does not seem to take the stack,
-        # seems to have off by one errors,
-        # order of operations errors,
-        # and might crash in some scenarios
-        # Needs to be investigated and unittested
-        if destination < len(self.columns): # check if the destination is valid (within range of cols.)
-            # get the top card of the destination column, if any.
-            column_top = self.columns[destination][-1] if self.columns[destination] else None
-
-            # if dest. column is empty, allow move if and only if card is king.
-            if column_top is None:
-                if card.rank == 'K':
-                    self.save_board_state() #save current state for save functionality.
-                    source_column.remove(card) #remove card from source column.
-                    self.columns[destination].append(card) #add the card to the dest column.
-                    self.update_board() #update the board.
-                    return True
-
-            # If the destination column is not empty, ensure the move follows the solitaire rules:
-            # - The card must match the suit of the top card in the destination column.
-            # - The card's rank must be exactly one less than the top card's rank.
-            elif (card.suit == column_top.suit and
-                  Card.PIPS.index(card.rank) == Card.PIPS.index(column_top.rank) - 1):
-                self.save_board_state()
-                source_column.remove(card)
-                self.columns[destination].append(card)
-                self.update_board()
-                return True
+        # First check if we are moving to a tableau and pass that off to the appropriate function
+        if destination is None:
+            return self.move_to_tableau(target_card)
+        # Get the coordinates of the column where the card is located
+        row, col = self.locate_card(target_card)
+        # Then get the destination column
+        destination_col = self.columns[destination]
+        # And check if we can move
+        if ((not destination_col # --------------------- If the destination is empty,
+        and target_card.rank == Card.PIPS[-1]) or # ---- Only allow the move if the card is highest rank (K).
+       (target_card.suit == destination_col[-1].suit # - Otherwise only allow the move is the suit matches,
+        and Card.PIPS.index(target_card.rank) == # ----- And the rank is one less than the destination
+        Card.PIPS.index(destination_col[-1].rank ) - 1)): # (As RR rules dictate)
+            # TODO: Check for off by one errors here
+            # If all our checks pass, go ahead and move the stack
+            stack = self.columns[col][row::]
+            self.columns[col] = self.columns[col][::row]
+            self.columns[destination] += stack
+            # Remembering to clean up afterwards.
+            self.update_board()
+            self.save_board_state()
+            return True
         # If none of the above are met, return False.
-        print("Invalid move.")
+        print("Could not find a valid move")
         return False
+
+    def move_to_tableau(self, target_card: Card) -> bool:
+        """Tries to move the first instance of target_card on the board to a tableau
+           returns a bool value specifying if it is successful"""
+        row, col = self.locate_card(target_card)
+        if self.columns[col][row] != self.columns[col][-1]:
+            print("Card is not at the end of a column!")
+            return False
+        for tab in self.tableaus:  # Then search the tableaus for a match
+            try: # Try/except is defnitely not the cleanest solution here but Im getting tired
+                if (not tab and target_card.rank == Card.PIPS[0] or # If tab is empty, check if we have an Ace
+                    Card.PIPS.index(target_card.rank) - 1 == Card.PIPS.index(tab[-1].rank)): # otherwise match rank
+                    # Move and return if we find a match
+                    tab.append(self.columns[col].pop())
+                    self.update_board()
+                    self.save_board_state()
+                    return True
+            except IndexError:
+                pass
+        # Otherwise return False
+        print("Card is not able to move to a tableau!")
+        return False
+
+    def locate_card(self, target_card: Card) -> tuple[int, int]:
+        """Takes a Card() object and returns the coordinates of first
+           column on the board to visibly contain that card in the format row, col"""
+        self.prune_array(self.columns)
+        for i, column in enumerate(self.columns):
+            for j, card in enumerate(column):
+                if card.visible and card == target_card:
+                    return j, i
+        raise ValueError(f"Card {target_card} not found or not available for move.")
+
+
     # def valid_move(self, card, destination):
     #     # TODO: It seems like there's likely a bug in this function, need to investigate
     #       We actually don't need this function it seems but it should be kept
@@ -404,105 +516,6 @@ class GameBoard:
     # </editor-fold>
 
 
-class Card:
-    """Class for a standard playing card, includes ability to set faceup/down and utils for generating cards"""
-    PIPS = [' A', ' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', '10', ' J', ' Q', ' K']
-    SUIT = ['♠', '♦', '♥', '♣']
-    BACK = "[_]"
-    # Pattern Development at: https://regex101.com/r/vCMe6C/3
-    # Matches a string like "As" or "10♦" into named capture groups for rank and suit (see: rank_suit_from_regex())
-    CARD_REGEX = re.compile(r"\b(?P<rank>[23456789AJQK]|10)(?P<suit>[SCHD♠♦♥♣])\b", flags=re.IGNORECASE)
-    def __init__(self, rank: str, suit: str=None):
-        if suit is None: # Allow for instantiation with only one argument
-            self.rank, self.suit = self.rank_suit_from_regex(rank)
-        else:
-            self.rank = rank
-            self.suit = suit
-        # Cards begin face up
-        self.visible = True
-
-    def flip(self):
-        """Flips the card over by toggling self.visible"""
-        self.visible = not self.visible
-
-    # <editor-fold: magic methods>
-    def __str__(self):
-        """Prints rank/suit if visible otherwise prints Card.BACK, applying the correct color based on suit"""
-        if self.visible:
-            color.fgcolor(color.RED if self.suit in {'♦', '♥'} else color.BLACK)
-            return f"{self.rank}{self.suit}"
-        else:
-            color.fgcolor(color.BLACK)
-            return Card.BACK
-
-    def __eq__(self, other):
-        """Can Match other Card() objects, and autoapplies Card.from_string() for strings"""
-        try:
-            return (self.rank == other.rank and
-                    self.suit == other.suit)
-        except AttributeError:
-            return self == Card.from_string(other)
-    # </editor-fold>
-
-    # <editor-fold: staticmethods>
-    @staticmethod
-    def new_deal() -> list:
-        """Like get_varieties(), but creates Card() objects instead, thus generating a standard 52 card deck"""
-        return [Card(rank, suit) for rank, suit in Card.get_varieties()]
-
-    @staticmethod
-    def get_varieties():
-        """Returns all possible combinations of suits and rank."""
-        return [(rank, suit) for rank in Card.PIPS for suit in Card.SUIT]
-
-    @staticmethod
-    def from_string(string: str):
-        """Assembles a Card() object from a string"""
-        return Card(*Card.rank_suit_from_regex(string))
-
-    @staticmethod
-    def rank_suit_from_regex(string:str)->tuple[str, str]:
-        m = re.match(Card.CARD_REGEX, string)
-        return m.group("rank"), m.group("suit")
-    #</editor-fold>
-
-    # <editor-fold: Properties>
-    @property
-    def rank(self):
-        return self._rank
-
-    @rank.setter
-    def rank(self, value: str):
-        """Case and whitespace insensitive, will always set a value from self.PIPS,
-           and can handle any output from rank_suit_from_regex()"""
-        flattened_pips = [pip.strip().casefold() for pip in self.PIPS]
-        value = value.strip().casefold()
-        if value in flattened_pips:
-            # I do not understand why there's a warn here on 'value' but it seems to work fine
-            self._rank = self.PIPS[flattened_pips.index(value)]
-        else:
-            raise ValueError(f"Invalid Rank: {value}")
-
-    @property
-    def suit(self):
-        return self._suit
-
-    @suit.setter
-    def suit(self, value: str):
-        """Case and whitespace insensitive, will always set a value from self.SUITS
-           and can handle any output from rank_suit_from_regex()"""
-        value = value.strip().casefold()
-        if value in ('s', '♠'):
-            self._suit = '♠'
-        elif value in ('d', '♦'):
-            self._suit = '♦'
-        elif value in ('h', '♥'):
-            self._suit = '♥'
-        elif value in ('c','♣'):
-            self._suit = '♣'
-        else:
-            raise ValueError(f"Unrecognized suit: {value}")
-    #</editor-fold>
 
 
 if __name__ == "__main__":

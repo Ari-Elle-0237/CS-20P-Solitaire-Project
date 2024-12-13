@@ -22,7 +22,6 @@ class RussianRevolverTestCase(unittest.TestCase):
         for col in gb.columns:
             self.assertEqual(expected_col_len, len(col))
 
-
     def test_can_flip_cards(self):
         pass
 
