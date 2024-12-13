@@ -435,9 +435,9 @@ class Card:
         return self._rank
 
     @rank.setter
-    def rank(self, value):
+    def rank(self, value: str):
         flattened_pips = [pip.strip().casefold() for pip in self.PIPS]
-        value = value.casefold()
+        value = str(value.strip().casefold())
         if value in flattened_pips:
             self._rank = self.PIPS[flattened_pips.index(value)]
         else:
