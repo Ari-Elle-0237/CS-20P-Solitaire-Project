@@ -274,18 +274,32 @@ class GameBoard:
     # <editor-fold: move() and move() helper functions>
     def move(self, target, destination: int) -> bool:
         """
-        # TODO: Add a better description
-        :param target: The card to be moved as specified by the user
-        :param destination: The destination column as specified by to user
-        :return: None
+        Attempts to move a card from its current column to a specified destination.
+
+        Params:
+        Target: the card to be moved, specified as a string ("AH, 5s, 10♠")
+        destination: the place the card will be moved to.
+
+        return true if move succeeds.
+        False if an error occurs or move is invalid.
+
+        Converts 'target' into a card object, locates its current column, ensures card is valid for use,
+        regarding its visibility and availability.
+            - destination column must be empty, card must be a king to start a new pile.
+            - otherwise. card must follow rank and suit compatibility rules.
+
+        Potential off by one errors.
+        does not handle moving stacks of cards.
+        assumes card stacks are organized according to solitaire rules.
         """
+        # Convert the target string to a Card object.
         card = Card.from_string(target)
-        if not card:
+        if not card: # checks for card parse-ability.
             print("invalid card.")
             return False
 
         source_column = next((col for col in self.columns if card in col), None)
-        if not source_column or not card.visible:
+        if not source_column or not card.visible: # Checks to see if the card is available to move according to game rules.
             print("Card not available for move.")
             return False
 
@@ -295,15 +309,22 @@ class GameBoard:
         # order of operations errors,
         # and might crash in some scenarios
         # Needs to be investigated and unittested
-        if destination < len(self.columns):
+        if destination < len(self.columns): # check if the destination is valid (within range of cols.)
+            # get the top card of the destination column, if any.
             column_top = self.columns[destination][-1] if self.columns[destination] else None
+
+            # if dest. column is empty, allow move if and only if card is king.
             if column_top is None:
                 if card.rank == 'K':
-                    self.save_board_state()
-                    source_column.remove(card)
-                    self.columns[destination].append(card)
-                    self.update_board()
+                    self.save_board_state() #save current state for save functionality.
+                    source_column.remove(card) #remove card from source column.
+                    self.columns[destination].append(card) #add the card to the dest column.
+                    self.update_board() #update the board.
                     return True
+
+            # If the destination column is not empty, ensure the move follows the solitaire rules:
+            # - The card must match the suit of the top card in the destination column.
+            # - The card's rank must be exactly one less than the top card's rank.
             elif (card.suit == column_top.suit and
                   Card.PIPS.index(card.rank) == Card.PIPS.index(column_top.rank) - 1):
                 self.save_board_state()
@@ -311,6 +332,7 @@ class GameBoard:
                 self.columns[destination].append(card)
                 self.update_board()
                 return True
+        # If none of the above are met, return False.
         print("Invalid move.")
         return False
     # def valid_move(self, card, destination):
