@@ -363,6 +363,8 @@ class GameBoard:
         """Prints the board similar to assignment specs by rotating self.columns"""
         # TODO: Make this handle colors,
         #  also maybe see about using f-string alignment instead of the janky predefined spaces in PIPS
+        # (I suspect that it may be necessary to use a separate print_board() method to handle colors,
+        # but I have not studied how they work much, and I also can't get it to work at all on Windows)
         self.update_card_visibility()
         # Header
         s = (f"Russian Revolver Solitaire  |  Deals:{self.deals}\n"
