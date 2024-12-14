@@ -359,7 +359,6 @@ class GameBoard:
     @staticmethod
     def prune_array(array_2d: list[list]) -> list[list]:
         """Removes trailing Nones from a 2d array (helper function for mirror_y_axis, and rotate_cw)"""
-        # TODO: Check if there is a bug here when the entire list is Nones
         for row in array_2d:
             while len(row) > 0 and row[-1] is None:
                row.pop()
@@ -412,7 +411,8 @@ class GameBoard:
         for tab in self.tableaus:  # Then search the tableaus for a match
             # If tab is empty, check if we have an Ace
             if (not tab and target_card.rank == Card.PIPS[0] or # Otherwise check if rank is 1 less
-            tab and Card.PIPS.index(target_card.rank) - 1 == Card.PIPS.index(tab[-1].rank)):
+            tab and Card.PIPS.index(target_card.rank) - 1 == Card.PIPS.index(tab[-1].rank) and
+            target_card.suit == tab[-1].suit):  # And that the suit matches
                 # Move and return if we find a match
                 tab.append(self.columns[col].pop())
                 self.update_board()
