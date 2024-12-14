@@ -287,6 +287,7 @@ class GameBoard:
 
     def gather_deck(self):
         """Moves the contents of all columns on the board into the deck, and then shuffles it"""
+        self.prune_array(self.columns)
         for col in self.columns:
             self.deck += col
             col.clear()
@@ -360,8 +361,8 @@ class GameBoard:
         """Removes trailing Nones from a 2d array (helper function for mirror_y_axis, and rotate_cw)"""
         # TODO: Check if there is a bug here when the entire list is Nones
         for row in array_2d:
-            while row[-1] is None:
-                row.pop()
+            while len(row) > 0 and row[-1] is None:
+               row.pop()
         return array_2d
     # </editor-fold>
 
